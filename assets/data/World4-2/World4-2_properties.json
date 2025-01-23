@@ -1,0 +1,43 @@
+{
+    "PLAYER_START": [2, 12],
+    "CAMERA_START": [0, 0],
+    "CAMERA_MAX": 224,
+    "LEVEL_TYPE": "START_UNDERGROUND",
+    "NEXT_LEVEL": [4, 3],
+    "BACKGROUND_COLOR": "BLUE",
+    "FLOATING_TEXT": [
+		{"pos": [110, 6], "text": "WELCOME TO WARP ZONE"},
+        {"pos": [111, 9], "text": "8"},
+        {"pos": [115, 9], "text": "7"},
+        {"pos": [119, 9], "text": "6"},
+		{"pos": [210, 24], "text": "WELCOME TO WARP ZONE"},
+		{"pos": [215, 27], "text": "5"}
+	],
+    "WARP_PIPE": [
+		{"pipe_coords": [10, 12], "teleport_coords": [3, 20], "camera_coords": [0, 18], "going_in": "RIGHT", "going_out": "NONE", "freeze_camera": false, "bg_color": "BLACK", "level_type": "UNDERGROUND", "level_to_go": [0, 0]},
+		{"pipe_coords": [84, 28], "teleport_coords": [118, 38], "camera_coords": [116, 36], "going_in": "DOWN", "going_out": "NONE", "freeze_camera": true, "bg_color": "BLACK", "level_type": "UNDERGROUND", "level_to_go": [0, 0]},
+		{"pipe_coords": [129, 48], "teleport_coords": [131, 29], "camera_coords": [125, 18], "going_in": "RIGHT", "going_out": "UP", "freeze_camera": false, "bg_color": "BLACK", "level_type": "UNDERGROUND", "level_to_go": [0, 0]},
+		{"pipe_coords": [187, 27], "teleport_coords": [189, 11], "camera_coords": [186, 0], "going_in": "RIGHT", "going_out": "UP", "freeze_camera": false, "bg_color": "BLUE", "level_type": "OVERWORLD", "level_to_go": [0, 0]},
+
+		{"pipe_coords": [110, 10], "teleport_coords": [0, 0], "camera_coords": [0, 0], "going_in": "DOWN", "going_out": "NONE", "freeze_camera": false, "bg_color": "BLUE", "level_type": "OVERWORLD", "level_to_go": [8, 1]},
+		{"pipe_coords": [114, 10], "teleport_coords": [0, 0], "camera_coords": [0, 0], "going_in": "DOWN", "going_out": "NONE", "freeze_camera": false, "bg_color": "BLUE", "level_type": "OVERWORLD", "level_to_go": [7, 1]},
+		{"pipe_coords": [118, 10], "teleport_coords": [0, 0], "camera_coords": [0, 0], "going_in": "DOWN", "going_out": "NONE", "freeze_camera": false, "bg_color": "BLUE", "level_type": "OVERWORLD", "level_to_go": [6, 1]},
+		{"pipe_coords": [214, 28], "teleport_coords": [0, 0], "camera_coords": [0, 0], "going_in": "DOWN", "going_out": "NONE", "freeze_camera": false, "bg_color": "BLUE", "level_type": "OVERWORLD", "level_to_go": [5, 1]}
+	],
+    "MOVING_PLATFORM": [
+		{"coords": [59, 26], "motion": "ONE_DIRECTION_REPEATED", "direction": "DOWN", "point": [17, 32], "shift": false},
+		{"coords": [115, 21], "motion": "ONE_DIRECTION_REPEATED", "direction": "DOWN", "point": [17, 32], "shift": false},
+		{"coords": [115, 28], "motion": "ONE_DIRECTION_REPEATED", "direction": "DOWN", "point": [17, 32], "shift": false},
+
+		{"coords": [124, 22], "motion": "ONE_DIRECTION_REPEATED", "direction": "UP", "point": [17, 32], "shift": false},
+		{"coords": [124, 29], "motion": "ONE_DIRECTION_REPEATED", "direction": "UP", "point": [17, 32], "shift": false},
+
+		{"coords": [156, 22], "motion": "ONE_DIRECTION_REPEATED", "direction": "DOWN", "point": [17, 32], "shift": false},
+		{"coords": [156, 29], "motion": "ONE_DIRECTION_REPEATED", "direction": "DOWN", "point": [17, 32], "shift": false}
+	],
+    "FIRE_BAR": [],
+    "VINE": [
+		{"vine_coords": [64, 23], "teleport_coords": [64, 13], "camera_coords": [60, 0], "y": 1000, "reset_location": [0, 0], "camera_max": 124, "bg_color": "BLUE", "level_type": "OVERWORLD"}
+	],
+    "PLATFORM_LEVEL": []
+}

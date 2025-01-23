@@ -1,0 +1,1 @@
+BridgeChain = Concord.component('bridge_chain', function(component)  end)

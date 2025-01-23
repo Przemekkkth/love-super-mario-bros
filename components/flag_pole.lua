@@ -1,0 +1,1 @@
+FlagPole = Concord.component('flag_pole_component', function(component) end)

@@ -1,0 +1,1 @@
+AxeComponent = Concord.component('axe_component', function(component) end)

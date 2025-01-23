@@ -1,0 +1,1 @@
+BumpableComponent = Concord.component('bumpable_component', function(component) end)

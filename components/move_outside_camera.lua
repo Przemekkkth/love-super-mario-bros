@@ -1,0 +1,1 @@
+MoveOutsideCameraComponent = Concord.component('move_outside_camera_component', function(component) end)

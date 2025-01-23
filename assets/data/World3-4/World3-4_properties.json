@@ -1,0 +1,30 @@
+{
+    "PLAYER_START": [1, 6],
+    "CAMERA_START": [0, 0],
+    "CAMERA_MAX": 164,
+    "LEVEL_TYPE": "CASTLE",
+    "NEXT_LEVEL": [4, 1],
+    "BACKGROUND_COLOR": "BLACK",
+    "FLOATING_TEXT": [
+		{"pos": [148, 5], "text": "THANK YOU MARIO"},
+        {"pos": [146, 7], "text": "BUT OUR PRINCESS IS IN"},
+        {"pos": [146, 8], "text": "ANOTHER CASTLE"}
+	],
+    "WARP_PIPE": [],
+    "MOVING_PLATFORM": [
+		{"coords": [138, 6], "motion": "BACK_AND_FORTH", "direction": "LEFT", "point": [134, 139], "shift": true}
+	],
+    "FIRE_BAR": [
+		{"coords": [19, 11], "angle": 330, "direction": "COUNTER_CLOCKWISE", "length": 6 },
+        {"coords": [24, 11],  "angle": 210, "direction": "COUNTER_CLOCKWISE", "length": 6 },
+		{"coords": [29, 11],  "angle": 90, "direction": "COUNTER_CLOCKWISE", "length": 6 },
+		{"coords": [54, 5],  "angle": 330, "direction": "COUNTER_CLOCKWISE", "length": 6 },
+		{"coords": [54, 11],  "angle": 60, "direction": "CLOCKWISE", "length": 6 },
+		{"coords": [64, 5],  "angle": 210, "direction": "COUNTER_CLOCKWISE", "length": 6 },
+		{"coords": [64, 11],  "angle": 300, "direction": "CLOCKWISE", "length": 6 },
+		{"coords": [80, 5],  "angle": 330, "direction": "CLOCKWISE", "length": 6 },
+		{"coords": [80, 11],  "angle": 60, "direction": "COUNTER_CLOCKWISE", "length": 6 }
+	],
+    "VINE": [],
+    "PLATFORM_LEVEL": []
+}

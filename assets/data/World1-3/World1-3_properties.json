@@ -1,0 +1,19 @@
+{
+    "PLAYER_START": [2, 12],
+    "CAMERA_START": [0, 0],
+    "CAMERA_MAX": 176,
+    "LEVEL_TYPE": "OVERWORLD",
+    "NEXT_LEVEL": [1, 4],
+    "BACKGROUND_COLOR": "BLUE",
+    "FLOATING_TEXT": [],
+    "WARP_PIPE": [],
+    "MOVING_PLATFORM": [
+        {"coords": [55, 6], "motion": "BACK_AND_FORTH", "direction": "DOWN", "point": [6, 14], "shift": false},
+        {"coords": [86, 8], "motion": "BACK_AND_FORTH", "direction": "LEFT", "point": [83, 88], "shift": false},
+        {"coords": [94, 9], "motion": "BACK_AND_FORTH", "direction": "LEFT", "point": [91, 96], "shift": false},
+        {"coords": [131, 6], "motion": "BACK_AND_FORTH", "direction": "LEFT", "point": [128, 130], "shift": false}
+    ],
+    "FIRE_BAR": [],
+    "VINE": [],
+    "PLATFORM_LEVEL": []
+}

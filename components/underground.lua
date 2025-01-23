@@ -1,0 +1,1 @@
+UndergroundComponent = Concord.component('underground_component', function(component) end)

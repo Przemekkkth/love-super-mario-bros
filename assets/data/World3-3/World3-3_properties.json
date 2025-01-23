@@ -1,0 +1,25 @@
+{
+    "PLAYER_START": [2, 12],
+    "CAMERA_START": [0, 0],
+    "CAMERA_MAX": 176,
+    "LEVEL_TYPE": "OVERWORLD",
+    "NEXT_LEVEL": [3, 4],
+    "BACKGROUND_COLOR": "BLACK",
+    "FLOATING_TEXT": [],
+    "WARP_PIPE": [],
+    "MOVING_PLATFORM": [
+		{"coords": [30, 4], "motion": "BACK_AND_FORTH", "direction": "LEFT", "point": [27, 32], "shift": false},
+		{"coords": [33, 8], "motion": "BACK_AND_FORTH", "direction": "LEFT", "point": [30, 35], "shift": false},
+		{"coords": [60, 6], "motion": "GRAVITY", "direction": "DOWN", "point": [0, 0], "shift": false},
+		{"coords": [96, 5], "motion": "BACK_AND_FORTH", "direction": "LEFT", "point": [93, 98], "shift": false},
+		{"coords": [94, 9], "motion": "BACK_AND_FORTH", "direction": "LEFT", "point": [91, 96], "shift": false},
+		{"coords": [103, 11], "motion": "BACK_AND_FORTH", "direction": "LEFT", "point": [100, 105], "shift": false},
+		{"coords": [132, 6], "motion": "BACK_AND_FORTH", "direction": "LEFT", "point": [128, 134], "shift": false}
+	],
+    "FIRE_BAR": [],
+    "VINE": [],
+    "PLATFORM_LEVEL": [
+        {"left_coords": [81, 6], "right_coords": [88, 8], "yLevel": 2},
+        {"left_coords": [136, 5], "right_coords": [140, 8], "yLevel": 2}
+    ]
+}

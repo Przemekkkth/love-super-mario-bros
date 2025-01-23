@@ -1,0 +1,24 @@
+{
+    "PLAYER_START": [1, 6],
+    "CAMERA_START": [0, 0],
+    "CAMERA_MAX": 227,
+    "LEVEL_TYPE": "CASTLE",
+    "NEXT_LEVEL": [8, 1],
+    "BACKGROUND_COLOR": "BLACK",
+    "FLOATING_TEXT": [
+		{"pos": [212, 5], "text": "THANK YOU MARIO"},
+        {"pos": [210, 6], "text": "BUT OUR PRINCESS IS IN"},
+        {"pos": [210, 7], "text": "ANOTHER CASTLE"}
+	],
+    "WARP_PIPE": [],
+    "MOVING_PLATFORM": [
+		{"coords": [18, 7], "motion": "GRAVITY", "direction": "NONE", "point": [0, 0], "shift": false},
+		{"coords": [22, 8], "motion": "GRAVITY", "direction": "NONE", "point": [0, 0], "shift": false}
+	],
+    "FIRE_BAR": [
+		{"coords": [103, 7], "angle": 210, "direction": "CLOCKWISE", "length": 6 } 
+	],
+    "VINE": [],
+    "PLATFORM_LEVEL": []
+}
+

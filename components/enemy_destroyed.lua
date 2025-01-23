@@ -1,0 +1,1 @@
+EnemyDestroyed = Concord.component('enemy_destroyed_component', function(component) end)

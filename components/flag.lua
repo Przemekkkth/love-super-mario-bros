@@ -1,0 +1,1 @@
+FlagComponent = Concord.component('flag_component', function(component) end)

@@ -1,0 +1,1 @@
+DeadComponent = Concord.component('dead_component', function(component)  end)

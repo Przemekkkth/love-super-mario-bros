@@ -1,0 +1,45 @@
+{
+    "PLAYER_START": [1, 6],
+    "CAMERA_START": [0, 0],
+    "CAMERA_MAX": 320,
+    "LEVEL_TYPE": "CASTLE",
+    "NEXT_LEVEL": [0, 0],
+    "BACKGROUND_COLOR": "BLACK",
+    "FLOATING_TEXT": [
+		{"pos": [308, 4], "text": "THANK YOU MARIO"},
+        {"pos": [307, 5], "text": "YOUR QUEST IS OVER"},
+        {"pos": [305, 6], "text": "WE PRESENT YOU A NEW QUEST"},
+		{"pos": [309, 8], "text": "PUSH BUTTON B"},
+        {"pos": [308, 9], "text": "TO SELECT A WORLD"}
+	],
+    "WARP_PIPE": [
+		{"pipe_coords": [51, 11], "teleport_coords": [19, 11], "camera_coords": [16, 0], "going_in": "DOWN", "going_out": "UP", "freeze_camera": false, "bg_color": "BLACK", "level_type": "CASTLE", "level_to_go": [0, 0]},
+		{"pipe_coords": [81, 8], "teleport_coords": [115, 11], "camera_coords": [112, 0], "going_in": "DOWN", "going_out": "UP", "freeze_camera": false, "bg_color": "BLACK", "level_type": "CASTLE", "level_to_go": [0, 0]},
+		{"pipe_coords": [132, 11], "teleport_coords": [19, 11], "camera_coords": [16, 0], "going_in": "DOWN", "going_out": "UP", "freeze_camera": false, "bg_color": "BLACK", "level_type": "CASTLE", "level_to_go": [0, 0]},
+		{"pipe_coords": [152, 6], "teleport_coords": [195, 11], "camera_coords": [192, 0], "going_in": "DOWN", "going_out": "UP", "freeze_camera": false, "bg_color": "BLACK", "level_type": "CASTLE", "level_to_go": [0, 0]},
+		{"pipe_coords": [212, 7], "teleport_coords": [19, 11], "camera_coords": [16, 0], "going_in": "DOWN", "going_out": "UP", "freeze_camera": false, "bg_color": "BLACK", "level_type": "CASTLE", "level_to_go": [0, 0]},
+
+		{"pipe_coords": [228, 8], "teleport_coords": [252, 28], "camera_coords": [248, 18], "going_in": "DOWN", "going_out": "NONE", "freeze_camera": false, "bg_color": "BLUE", "level_type": "UNDERWATER", "level_to_go": [0, 0]},
+
+		{"pipe_coords": [316, 26], "teleport_coords": [259, 11], "camera_coords": [256, 0], "going_in": "RIGHT", "going_out": "UP", "freeze_camera": false, "bg_color": "BLACK", "level_type": "CASTLE", "level_to_go": [0, 0]},
+		{"pipe_coords": [266, 11], "teleport_coords": [19, 11], "camera_coords": [16, 0], "going_in": "DOWN", "going_out": "UP", "freeze_camera": false, "bg_color": "BLACK", "level_type": "CASTLE", "level_to_go": [0, 0]},
+	],
+    "MOVING_PLATFORM": [
+		{"coords": [70, 13], "motion": "BACK_AND_FORTH", "direction": "LEFT", "point": [66, 74], "shift": false}
+	],
+    "FIRE_BAR": [
+		{"coords": [268, 25], "angle": 210, "direction": "CLOCKWISE", "length": 6 },
+
+		{"coords": [279, 28], "angle": 330, "direction": "COUNTER_CLOCKWISE", "length": 6 }, 
+		{"coords": [288, 24], "angle": 210, "direction": "CLOCKWISE", "length": 6 },
+		{"coords": [304, 26], "angle": 210, "direction": "CLOCKWISE", "length": 6 },
+		{"coords": [312, 25], "angle": 330, "direction": "COUNTER_CLOCKWISE", "length": 6 }      
+	],
+    "VINE": [],
+    "PLATFORM_LEVEL": [],
+	"TELEPORT_POINT": [
+		{"point": [100, 32]},
+		{"point": [165, 100]},
+		{"point": [244, 181]}
+	]
+}

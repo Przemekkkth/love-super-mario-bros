@@ -1,0 +1,1 @@
+IconComponent = Concord.component('icon', function(e) end)

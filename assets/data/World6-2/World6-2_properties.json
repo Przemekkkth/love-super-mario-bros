@@ -1,0 +1,26 @@
+{
+    "PLAYER_START": [2, 27],
+    "CAMERA_START": [0, 15],
+    "CAMERA_MAX": 240,
+    "LEVEL_TYPE": "OVERWORLD",
+    "NEXT_LEVEL": [6, 3],
+    "BACKGROUND_COLOR": "BLACK",
+    "FLOATING_TEXT": [],
+    "WARP_PIPE": [
+		{"pipe_coords": [19, 24], "teleport_coords": [22, 35], "camera_coords": [20, 33], "going_in": "DOWN", "going_out": "NONE", "freeze_camera": true, "bg_color": "BLACK", "level_type": "UNDERGROUND", "level_to_go": [0, 0]},
+        {"pipe_coords": [33, 45], "teleport_coords": [35, 26], "camera_coords": [32, 15], "going_in": "RIGHT", "going_out": "UP", "freeze_camera": false, "bg_color": "BLACK", "level_type": "OVERWORLD", "level_to_go": [0, 0]},
+		{"pipe_coords": [56, 23], "teleport_coords": [177, 35], "camera_coords": [175, 33], "going_in": "DOWN", "going_out": "NONE", "freeze_camera": false, "bg_color": "BLUE", "level_type": "UNDERWATER", "level_to_go": [0, 0]},
+		{"pipe_coords": [237, 41], "teleport_coords": [115, 26], "camera_coords": [110, 15], "going_in": "RIGHT", "going_out": "UP", "freeze_camera": false, "bg_color": "BLACK", "level_type": "OVERWORLD", "level_to_go": [0, 0]},
+		{"pipe_coords": [153, 25], "teleport_coords": [155, 35], "camera_coords": [153, 33], "going_in": "DOWN", "going_out": "NONE", "freeze_camera": true, "bg_color": "BLACK", "level_type": "UNDERGROUND", "level_to_go": [0, 0]},
+		{"pipe_coords": [166, 45], "teleport_coords": [179, 26], "camera_coords": [176, 15], "going_in": "RIGHT", "going_out": "UP", "freeze_camera": false, "bg_color": "BLACK", "level_type": "OVERWORLD", "level_to_go": [0, 0]}
+	],
+    "MOVING_PLATFORM": [
+		{"coords": [197, 42], "motion": "ONE_DIRECTION_REPEATED", "direction": "DOWN", "point": [33, 47], "shift": true},
+		{"coords": [203, 39], "motion": "ONE_DIRECTION_REPEATED", "direction": "DOWN", "point": [33, 47], "shift": true}
+	],
+    "FIRE_BAR": [],
+    "VINE": [
+		{"vine_coords": [81, 20], "teleport_coords": [81, 13], "camera_coords": [77, 0], "y": 13, "reset_location": [162, 16], "camera_max": 240, "bg_color": "BLACK", "level_type": "OVERWORLD"}
+	],
+    "PLATFORM_LEVEL": []
+}

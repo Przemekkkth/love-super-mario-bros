@@ -1,0 +1,1 @@
+GravityComponent = Concord.component('gravity_component', function(component) end)

@@ -1,0 +1,1 @@
+ParticleComponent = Concord.component('particle', function(e) end)

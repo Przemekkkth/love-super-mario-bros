@@ -1,0 +1,32 @@
+{
+    "PLAYER_START": [2, 12],
+    "CAMERA_START": [0, 0],
+    "CAMERA_MAX": 192,
+    "LEVEL_TYPE": "OVERWORLD",
+    "NEXT_LEVEL": [6, 4],
+    "BACKGROUND_COLOR": "BLACK",
+    "FLOATING_TEXT": [],
+    "WARP_PIPE": [],
+    "MOVING_PLATFORM": [
+		{"coords": [28, 13], "motion": "BACK_AND_FORTH", "direction": "UP", "point": [5, 13], "shift": false},
+		{"coords": [43, 5], "motion": "BACK_AND_FORTH", "direction": "LEFT", "point": [39, 44], "shift": true},
+		{"coords": [48, 7], "motion": "BACK_AND_FORTH", "direction": "LEFT", "point": [44, 49], "shift": true},
+		{"coords": [55, 6], "motion": "BACK_AND_FORTH", "direction": "LEFT", "point": [51, 56], "shift": true},
+		{"coords": [60, 12], "motion": "BACK_AND_FORTH", "direction": "UP", "point": [4, 12], "shift": true},
+		{"coords": [121, 5], "motion": "BACK_AND_FORTH", "direction": "LEFT", "point": [117, 122], "shift": true},
+		{"coords": [121, 5], "motion": "BACK_AND_FORTH", "direction": "LEFT", "point": [117, 122], "shift": true},
+		{"coords": [141, 7], "motion": "GRAVITY", "direction": "NONE", "point": [0, 0], "shift": false},
+		{"coords": [145, 6], "motion": "GRAVITY", "direction": "NONE", "point": [0, 0], "shift": false},
+		{"coords": [149, 8], "motion": "GRAVITY", "direction": "NONE", "point": [0, 0], "shift": false},
+		{"coords": [153, 7], "motion": "GRAVITY", "direction": "NONE", "point": [0, 0], "shift": false}
+	],
+    "FIRE_BAR": [],
+    "VINE": [
+		{"vine_coords": [81, 20], "teleport_coords": [81, 13], "camera_coords": [77, 0], "y": 13, "reset_location": [162, 16], "camera_max": 240, "bg_color": "BLACK", "level_type": "OVERWORLD"}
+	],
+    "PLATFORM_LEVEL": [
+		{"left_coords": [70, 5], "right_coords": [74, 9], "yLevel": 2},
+		{"left_coords": [78, 5], "right_coords": [81, 9], "yLevel": 2},
+		{"left_coords": [126, 6], "right_coords": [129, 9], "yLevel": 2}
+	]
+}

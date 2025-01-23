@@ -1,0 +1,1 @@
+FrictionExemptComponent = Concord.component('friction_exempt_component', function(component) end)

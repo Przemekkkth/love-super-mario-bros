@@ -1,0 +1,1 @@
+RightCollisionComponent = Concord.component('right_collision_component', function(component) end)

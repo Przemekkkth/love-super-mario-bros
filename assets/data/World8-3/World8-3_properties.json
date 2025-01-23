@@ -1,0 +1,14 @@
+{
+    "PLAYER_START": [2, 12],
+    "CAMERA_START": [0, 0],
+    "CAMERA_MAX": 240,
+    "LEVEL_TYPE": "OVERWORLD",
+    "NEXT_LEVEL": [8, 4],
+    "BACKGROUND_COLOR": "BLUE",
+    "FLOATING_TEXT": [],
+    "WARP_PIPE": [],
+    "MOVING_PLATFORM": [],
+    "FIRE_BAR": [],
+    "VINE": [],
+    "PLATFORM_LEVEL": []
+}

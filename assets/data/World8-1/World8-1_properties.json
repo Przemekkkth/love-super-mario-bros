@@ -1,0 +1,17 @@
+{
+    "PLAYER_START": [2, 12],
+    "CAMERA_START": [0, 0],
+    "CAMERA_MAX": 400,
+    "LEVEL_TYPE": "OVERWORLD",
+    "NEXT_LEVEL": [8, 2],
+    "BACKGROUND_COLOR": "BLUE",
+    "FLOATING_TEXT": [],
+    "WARP_PIPE": [
+		{"pipe_coords": [104, 9], "teleport_coords": [101, 20], "camera_coords": [100, 18], "going_in": "DOWN", "going_out": "NONE", "freeze_camera": true, "bg_color": "BLACK", "level_type": "UNDERGROUND", "level_to_go": [0, 0]},
+        {"pipe_coords": [113, 30], "teleport_coords": [115, 11], "camera_coords": [112, 0], "going_in": "RIGHT", "going_out": "UP", "freeze_camera": false, "bg_color": "BLUE", "level_type": "OVERWORLD", "level_to_go": [0, 0]}
+	],
+    "MOVING_PLATFORM": [],
+    "FIRE_BAR": [],
+    "VINE": [],
+    "PLATFORM_LEVEL": []
+}

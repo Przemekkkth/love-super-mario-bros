@@ -1,0 +1,37 @@
+{
+    "PLAYER_START": [1, 6],
+    "CAMERA_START": [0, 0],
+    "CAMERA_MAX": 164,
+    "LEVEL_TYPE": "CASTLE",
+    "NEXT_LEVEL": [6, 1],
+    "BACKGROUND_COLOR": "BLACK",
+    "FLOATING_TEXT": [
+		{"pos": [148, 5], "text": "THANK YOU MARIO"},
+        {"pos": [146, 6], "text": "BUT OUR PRINCESS IS IN"},
+        {"pos": [146, 7], "text": "ANOTHER CASTLE"}
+	],
+    "WARP_PIPE": [],
+    "MOVING_PLATFORM": [
+		{"coords": [85, 6], "motion": "ONE_DIRECTION_REPEATED", "direction": "UP", "point": [2, 14], "shift": true},
+		{"coords": [85, 14], "motion": "ONE_DIRECTION_REPEATED", "direction": "UP", "point": [2, 14], "shift": true},
+
+		{"coords": [88, 4], "motion": "ONE_DIRECTION_REPEATED", "direction": "DOWN", "point": [2, 14], "shift": true},
+		{"coords": [88, 12], "motion": "ONE_DIRECTION_REPEATED", "direction": "DOWN", "point": [2, 14], "shift": true},
+		{"coords": [135, 6], "motion": "BACK_AND_FORTH", "direction": "LEFT", "point": [134, 139], "shift": true}
+	],
+    "FIRE_BAR": [
+		{"coords": [23, 7], "angle": 90, "direction": "CLOCKWISE", "length": 12 },
+        {"coords": [43, 13],  "angle": 210, "direction": "CLOCKWISE", "length": 6 },
+		{"coords": [49, 9],  "angle": 150, "direction": "COUNTER_CLOCKWISE", "length": 6 },
+		{"coords": [55, 5],  "angle": 210, "direction": "COUNTER_CLOCKWISE", "length": 6 },
+		{"coords": [55, 13],  "angle": 290, "direction": "CLOCKWISE", "length": 6 },		
+		{"coords": [61, 9],  "angle": 150, "direction": "COUNTER_CLOCKWISE", "length": 6 },
+		{"coords": [67, 13],  "angle": 210, "direction": "COUNTER_CLOCKWISE", "length": 6 },
+		{"coords": [73, 9],  "angle": 90, "direction": "COUNTER_CLOCKWISE", "length": 6 },
+		{"coords": [82, 6],  "angle": 50, "direction": "COUNTER_CLOCKWISE", "length": 6 },
+		{"coords": [92, 10],  "angle": 330, "direction": "CLOCKWISE", "length": 6 },
+		{"coords": [103, 11],  "angle": 270, "direction": "CLOCKWISE", "length": 6 }
+	],
+    "VINE": [],
+    "PLATFORM_LEVEL": []
+}

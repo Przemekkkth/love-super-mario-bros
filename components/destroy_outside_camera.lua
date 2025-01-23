@@ -1,0 +1,1 @@
+DestroyOutsideCameraComponent = Concord.component('destroy_outside_camera_component', function(component)  end)

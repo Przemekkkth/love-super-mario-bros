@@ -1,0 +1,1 @@
+BackgroundComponent = Concord.component('background', function(e) end)

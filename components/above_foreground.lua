@@ -1,0 +1,1 @@
+AboveForegroundComponent = Concord.component('above_foreground', function(e) end)

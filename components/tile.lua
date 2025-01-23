@@ -1,0 +1,1 @@
+TileComponent = Concord.component('tile_component', function(component) end)
