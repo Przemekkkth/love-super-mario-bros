@@ -470,10 +470,10 @@ function GameScene:setupLevel()
           if show_performance_log then
             print("After collection: " .. collectgarbage("count")/1024)
             print("Object count: ")
+            local counts = type_count()
+            for k, v in pairs(counts) do print(k, v) end
           end
 
-          local counts = type_count()
-          for k, v in pairs(counts) do print(k, v) end
     end, 3.0))
 end
 
