@@ -3,6 +3,7 @@ Object  = require 'libraries.classic'
 Input   = require 'libraries.boipushy.Input'
 JSON    = require 'libraries.json'
 MAX_FPS = 60
+MUTED   = false
 
 function love.load()
     require 'globals'
@@ -55,6 +56,17 @@ function love.update(dt)
         --Uncomment if you want to make screenshot
         --love.graphics.captureScreenshot(os.time() .. ".png")
     end
+
+    if input:released('TOGGLE_MUTE') then
+        MUTED = not MUTED
+        if MUTED then
+            setMusicVolume(0.0)
+            setSoundVolume(0.0)
+        else
+            setMusicVolume(1.0)
+            setSoundVolume(1.0)
+        end
+    end
 end
 
 function love.draw()
@@ -102,6 +114,7 @@ function initInput()
     input:bind('escape','PAUSE')
 
     input:bind('c', 'MAKE_SCREENSHOT')
+    input:bind('m', 'TOGGLE_MUTE')
 end
 
 function love.run()

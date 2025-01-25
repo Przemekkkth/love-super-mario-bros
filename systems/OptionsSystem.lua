@@ -18,7 +18,8 @@ function OptionsSystem:init(world)
     self:createSprintTextInfo(world)
 --FIREBALL KEY
     self:createFireballTextInfo(world)
-
+--MUTE KEY
+    self:createMuteText(world)
     self:createGoToBack(world)
 end
 
@@ -129,8 +130,19 @@ function OptionsSystem:createFireballTextInfo(world)
     fireballKeyName:give('text', 'Q', 16)
 end
 
+function OptionsSystem:createMuteText(world)
+    local muteKeybindText = Concord.entity(world)
+    muteKeybindText:give('position', {x = 6 * SCALED_CUBE_SIZE, y = 8 * SCALED_CUBE_SIZE})
+    muteKeybindText:give('text', 'TOGGLE MUTE KEY:', 16)
+
+    local muteKeyName = Concord.entity(world)
+    muteKeyName:give('position', {x = 14 * SCALED_CUBE_SIZE, y = 8 * SCALED_CUBE_SIZE})
+    muteKeyName:give('text', 'M', 16)
+end
+
 function OptionsSystem:createGoToBack(world)
     local gobackText = Concord.entity(world)
-    gobackText:give('position', {x = 6 * SCALED_CUBE_SIZE, y = 9 * SCALED_CUBE_SIZE})
+    gobackText:give('position', {x = 6 * SCALED_CUBE_SIZE, y = 10 * SCALED_CUBE_SIZE})
     gobackText:give('text', 'Go Back: Escape', 16)
 end
+
