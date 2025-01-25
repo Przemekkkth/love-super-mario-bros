@@ -101,7 +101,7 @@ function initInput()
     input:bind('escape','MENU_ESCAPE')
     input:bind('escape','PAUSE')
 
-    input:bind('m', 'MAKE_SCREENSHOT')
+    input:bind('c', 'MAKE_SCREENSHOT')
 end
 
 function love.run()
