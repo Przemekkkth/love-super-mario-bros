@@ -42,8 +42,8 @@ function love.load()
     MapInstance:loadEnemyIDS()
     MapInstance:loadPlayerIDS()
     MapInstance:loadIrregularBlockReferences()
-    setMusicVolume(0.1)
-    setSoundVolume(0.1)
+    setMusicVolume(1.0)
+    setSoundVolume(1.0)
 
     gotoScene('MenuScene')
 end
