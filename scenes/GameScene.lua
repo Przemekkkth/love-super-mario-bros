@@ -41,12 +41,18 @@ function GameScene:new(level, subLevel)
     self.selectCursor:give('position', {x = 9.5 * SCALED_CUBE_SIZE, y = 10.5 * SCALED_CUBE_SIZE})
     self.selectCursor:give('text', '>', 14, false, false)
 
+    self.is_finished = false
+
     self:setupLevel()
 end
 
 function GameScene:update(dt)
     self:handlePlayerInput()
     self.world:emit('update')
+
+    if self:isFinished() then
+        gotoScene('GameOverScene')
+    end
 end
 
 function GameScene:draw()
@@ -470,7 +476,7 @@ function GameScene:restartLevel()
         self.world:getSystem(ScoreSystem):decreaseLives()
 
         if self.world:getSystem(ScoreSystem):getLives() <= 0 then
-            self.gameFinished = true
+            self.is_finished = true
             return
         end
         self:setupLevel()
@@ -483,4 +489,8 @@ end
 
 function GameScene:setCurrentLevelType(levelType) 
     self.currentLevelType = levelType
+end
+
+function GameScene:isFinished()
+    return self.is_finished
 end
