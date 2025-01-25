@@ -22,11 +22,24 @@ function GameOverScene:update(dt)
     self.world:emit('update')
     self.timer = self.timer + 1
     if self.timer > 4.5 * MAX_FPS then
+        self:destroyWorldEntities()
         gotoScene('MenuScene')
     end
 end
 
 function GameOverScene:draw()
     self.world:emit('draw')
+end
+
+function GameOverScene:destroyWorldEntities()
+    for _, entity in ipairs(self.world:getEntities()) do
+        if entity:has('sound_component') then
+            entity.sound_component:destroy()
+        end
+
+        if entity:has('text') then
+            entity.text:destroy()
+        end
+    end
 end
 

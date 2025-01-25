@@ -32,6 +32,7 @@ function MenuScene:update(dt)
             self.finished = true
             local level = self.menuWorld:getSystem(MenuSystem):getSelectedLevel()
             local subLevel = self.menuWorld:getSystem(MenuSystem):getSelectedSublevel()
+            self:destroyWorldEntities()
             gotoScene('GameScene', level, subLevel)
         elseif self.menuWorld:getSystem(MenuSystem):optionsSelected() then
            self:optionsSystem():setEnabled(true)
@@ -75,4 +76,34 @@ end
 
 function MenuScene:menuSystem()
     return self.menuWorld:getSystem(MenuSystem)
+end
+
+function MenuScene:destroyWorldEntities()
+    for _, entity in ipairs(self.menuWorld:getEntities()) do
+        if entity:has('spritesheet') then
+            entity.spritesheet:destroy()
+        end
+
+        if entity:has('text') then
+            entity.text:destroy()
+        end
+
+        if entity:has('texture') then
+            entity.texture:destroy()
+        end
+    end
+
+    for _, entity in ipairs(self.optionsWorld:getEntities()) do
+        if entity:has('spritesheet') then
+            entity.spritesheet:destroy()
+        end
+
+        if entity:has('text') then
+            entity.text:destroy()
+        end
+
+        if entity:has('texture') then
+            entity.texture:destroy()
+        end
+    end
 end

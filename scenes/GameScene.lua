@@ -349,6 +349,10 @@ function GameScene:destroyWorldEntities()
                     entity.text:destroy()
                 end
 
+                if entity:has('texture') then
+                    entity.texture:destroy()
+                end
+
                 if entity:has('timer_component') then
                     entity.timer_component:destroy()
                 end
@@ -373,9 +377,6 @@ function GameScene:destroyWorldEntities()
                     entity.warp_pipe_component:destroy()
                 end
 
-                if entity:has('spritesheet') then
-                    entity.spritesheet:destroy()
-                end
                 self.world:removeEntity(entity)
                 entity = nil
             end
