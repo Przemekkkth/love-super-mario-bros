@@ -1,9 +1,8 @@
 OptionsSystem = Concord.system()
 
-function OptionsSystem:init(world) --onAddedToWorld(world))
+function OptionsSystem:init(world)
     self.finished = false
 
-    self:createCursor(world)
     self:createKeyUnderline(world)
     self:createOptionsBackground(world)
     self:createInfoBackground(world)
@@ -77,7 +76,7 @@ function OptionsSystem:createLeftTextInfo(world)
 
     local leftKeyName = Concord.entity(world)
     leftKeyName:give('position', {x = 14 * SCALED_CUBE_SIZE, y = 2 * SCALED_CUBE_SIZE})
-    leftKeyName:give('text', 'A', 16)
+    leftKeyName:give('text', 'A, <-', 16)
 end
 
 function OptionsSystem:createRightTextInfo(world)
@@ -87,7 +86,7 @@ function OptionsSystem:createRightTextInfo(world)
 
     local rightKeyName = Concord.entity(world)
     rightKeyName:give('position', {x = 14 * SCALED_CUBE_SIZE, y = 3 * SCALED_CUBE_SIZE})
-    rightKeyName:give('text', 'D', 16)
+    rightKeyName:give('text', 'D, ->', 16)
 end
 
 function OptionsSystem:createJumpTextInfo(world)
@@ -97,7 +96,7 @@ function OptionsSystem:createJumpTextInfo(world)
 
     local jumpKeyName = Concord.entity(world)
     jumpKeyName:give('position', {x = 14 * SCALED_CUBE_SIZE, y = 4 * SCALED_CUBE_SIZE})
-    jumpKeyName:give('text', 'W', 16)
+    jumpKeyName:give('text', 'SPACE', 16)
 end
 
 function OptionsSystem:createDuckTextInfo(world)
@@ -107,7 +106,7 @@ function OptionsSystem:createDuckTextInfo(world)
 
     local duckKeyName = Concord.entity(world)
     duckKeyName:give('position', {x = 14 * SCALED_CUBE_SIZE, y = 5 * SCALED_CUBE_SIZE})
-    duckKeyName:give('text', 'S', 16)
+    duckKeyName:give('text', 'S, down arrow', 16)
 end
 
 function OptionsSystem:createSprintTextInfo(world)
@@ -133,5 +132,5 @@ end
 function OptionsSystem:createGoToBack(world)
     local gobackText = Concord.entity(world)
     gobackText:give('position', {x = 6 * SCALED_CUBE_SIZE, y = 9 * SCALED_CUBE_SIZE})
-    gobackText:give('text', 'Go Back', 16)
+    gobackText:give('text', 'Go Back: Escape', 16)
 end
