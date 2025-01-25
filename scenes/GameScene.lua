@@ -29,19 +29,16 @@ function GameScene:new(level, subLevel)
     self.continueText:give('position', {x = 10.2 * SCALED_CUBE_SIZE, y = 8.5 * SCALED_CUBE_SIZE})
     self.continueText:give('text', 'CONTINUE', 14, false, false)
 
-    self.optionsText = Concord.entity(self.pauseWorld)
-    self.optionsText:give('position', {x = 10.2 * SCALED_CUBE_SIZE, y = 9.5 * SCALED_CUBE_SIZE})
-    self.optionsText:give('text', 'OPTIONS', 14, false, false)
-
     self.endText = Concord.entity(self.pauseWorld)
     self.endText:give('position', {x = 10.2 * SCALED_CUBE_SIZE, y = 10.5 * SCALED_CUBE_SIZE})
     self.endText:give('text', 'end', 14, false, false)
 
     self.selectCursor = Concord.entity(self.pauseWorld)
-    self.selectCursor:give('position', {x = 9.5 * SCALED_CUBE_SIZE, y = 10.5 * SCALED_CUBE_SIZE})
+    self.selectCursor:give('position', {x = 9.5 * SCALED_CUBE_SIZE, y = 8.5 * SCALED_CUBE_SIZE})
     self.selectCursor:give('text', '>', 14, false, false)
 
     self.is_finished = false
+    self.pauseSelectedOption = 0
 
     self:setupLevel()
 end
@@ -168,7 +165,6 @@ function GameScene:pause()
 
     self.pauseText.text:setVisible(true)
     self.continueText.text:setVisible(true)
-    self.optionsText.text:setVisible(true)
     self.endText.text:setVisible(true)
     self.selectCursor.text:setVisible(true)
 
@@ -190,7 +186,6 @@ function GameScene:unpause()
 
     self.pauseText.text:setVisible(false)
     self.continueText.text:setVisible(false)
-    self.optionsText.text:setVisible(false)
     self.endText.text:setVisible(false)
     self.selectCursor.text:setVisible(false)
 
@@ -233,6 +228,32 @@ function GameScene:handlePlayerInput()
         else
             print('unpaused')
             self:unpause()
+        end
+    end
+
+    if self.paused then
+        if input:released('MENU_DOWN') then
+            self.pauseSelectedOption = self.pauseSelectedOption + 1
+            if self.pauseSelectedOption > 1 then
+                self.pauseSelectedOption = 0
+            end
+        end
+
+        if input:released('MENU_UP') then
+            self.pauseSelectedOption = self.pauseSelectedOption - 1
+            if self.pauseSelectedOption < 0 then
+                self.pauseSelectedOption = 1
+            end
+        end
+        
+        self.selectCursor.position.position.y = 8.5 * SCALED_CUBE_SIZE + 2 * self.pauseSelectedOption * SCALED_CUBE_SIZE
+
+        if input:released('MENU_ACCEPT') then
+            if self.pauseSelectedOption == 0 then
+                self:unpause()
+            elseif self.pauseSelectedOption == 1 then
+                self:goToMenuScene()
+            end
         end
     end
 end
@@ -494,4 +515,9 @@ end
 
 function GameScene:isFinished()
     return self.is_finished
+end
+
+function GameScene:goToMenuScene()
+    self:destroyWorldEntities()
+    gotoScene('MenuScene')
 end
