@@ -23,3 +23,4 @@
 * [JSON library](https://github.com/rxi/json.lua)
 * [OOO library](https://github.com/rxi/classic)
 * [Input library](https://github.com/a327ex/boipushy)
+* [Gameplay](https://youtu.be/0Z8td5VgF90)
