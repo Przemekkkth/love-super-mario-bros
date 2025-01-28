@@ -1,8 +1,9 @@
 WarpCommand = SequenceCommand:extend()
 
-function WarpCommand:new(scene, world, pipe, player)
+function WarpCommand:new(scene, world, pipe)
     WarpCommand.super.new(self, {})
 
+    local player = world:getSystem(PlayerSystem):getMario()
     if player:has('particle') or player:has('dead_component') then
         self:addCommands({RunCommand(function() end)})
         return
