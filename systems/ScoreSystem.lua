@@ -1,15 +1,14 @@
 ScoreSystem = Concord.system()
 
 function ScoreSystem:init(world)
-    -- entity start
-    self.scoreEntity           = Concord.entity(world)
-    self.coinsEntity           = Concord.entity(world)
-    self.timerEntity           = Concord.entity(world)
-    self.worldNumberEntity     = Concord.entity(world) 
-    self.worldNumberTransition = Concord.entity(world)
-    self.marioIcon             = Concord.entity(world)
-    self.livesText             = Concord.entity(world)
-    --entity end
+    self.world = world
+    self.scoreEntity           = Concord.entity(self.world)
+    self.coinsEntity           = Concord.entity(self.world)
+    self.timerEntity           = Concord.entity(self.world)
+    self.worldNumberEntity     = Concord.entity(self.world) 
+    self.worldNumberTransition = Concord.entity(self.world)
+    self.marioIcon             = Concord.entity(self.world)
+    self.livesText             = Concord.entity(self.world)
 
     self.totalScore = 0;
     self.coins = 0;
@@ -30,17 +29,17 @@ function ScoreSystem:init(world)
     local columns = 4
     local columnWidth = availableWidth / columns
  
-    self:createMarioText(paddingW, paddingH, world)
+    self:createMarioText(paddingW, paddingH)
     self:createScoreText(paddingW, paddingH + textHeight + spacingH)
-    self:createCoinIcon(paddingW + columnWidth, paddingH + textHeight + spacingH + 2, world)
+    self:createCoinIcon(paddingW + columnWidth, paddingH + textHeight + spacingH + 2)
     self:createCoinText(paddingW + columnWidth + 18, paddingH + textHeight + spacingH)
-    self:createWorldText(paddingW + (2 * columnWidth), paddingH, world)
+    self:createWorldText(paddingW + (2 * columnWidth), paddingH)
     self:createWorldNumberText(paddingW + (2 * columnWidth), paddingH + textHeight + spacingH)
-    self:createTimeText(paddingW + (3 * columnWidth), paddingH, world)
+    self:createTimeText(paddingW + (3 * columnWidth), paddingH)
     self:createTimerText(paddingW + (3 * columnWidth) + 4, paddingH + textHeight + spacingH)
-    self:createWorldNumberTransition(paddingW + (columnWidth * 1.5), paddingH * 10 + textHeight + spacingH)
-    self:createMarioIcon(paddingW + (columnWidth * 1.5), paddingH * 12 + textHeight + spacingH)
-    self:createLivesText(paddingW * 2 + (columnWidth * 1.5), paddingH * 12 + textHeight + spacingH * 3)
+    self:createWorldNumberTransition(paddingW + (1.5 * columnWidth), 10 * paddingH + textHeight + spacingH)
+    self:createMarioIcon(paddingW + (1.5 * columnWidth), 12 * paddingH + textHeight + spacingH)
+    self:createLivesText(paddingW * 2 + (1.5 * columnWidth), 12 * paddingH + textHeight + 3 * spacingH)
 end
 
 function ScoreSystem:setScene(scene)
@@ -134,8 +133,8 @@ function ScoreSystem:update()
     end
 end
 
-function ScoreSystem:createMarioText(x, y, world)
-    local marioText = Concord.entity(world)
+function ScoreSystem:createMarioText(x, y)
+    local marioText = Concord.entity(self.world)
     marioText:give('position', {x = x, y = y})
     marioText:give('text', 'MARIO', 16)
 end
@@ -145,8 +144,8 @@ function ScoreSystem:createScoreText(x, y)
     self.scoreEntity:give('text', '000000', 16)
 end
 
-function ScoreSystem:createCoinIcon(x, y, world)
-    local coinIcon = Concord.entity(world)
+function ScoreSystem:createCoinIcon(x, y)
+    local coinIcon = Concord.entity(self.world)
     coinIcon:give('position', {x = x, y = y}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
     coinIcon:give('texture', BLOCK_TILESHEET_IMG, false, false)
     coinIcon:give('spritesheet', coinIcon.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE, 1, 1, 1,
@@ -165,8 +164,8 @@ function ScoreSystem:createCoinText(x, y)
     self.coinsEntity:give('text', 'x00', 16)
 end
 
-function ScoreSystem:createWorldText(x, y, world)
-    local worldEntity = Concord.entity(world)
+function ScoreSystem:createWorldText(x, y)
+    local worldEntity = Concord.entity(self.world)
     worldEntity:give('position', {x = x, y = y})
     worldEntity:give('text', 'WORLD', 16)
 end
@@ -176,8 +175,8 @@ function ScoreSystem:createWorldNumberText(x, y)
     self.worldNumberEntity:give('text', '0-0', 16)
 end
 
-function ScoreSystem:createTimeText(x, y, world)
-    local timeEntity = Concord.entity(world)
+function ScoreSystem:createTimeText(x, y)
+    local timeEntity = Concord.entity(self.world)
     timeEntity:give('position', {x = x, y = y})
     timeEntity:give('text', "TIME", 16)
 end

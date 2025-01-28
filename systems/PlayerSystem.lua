@@ -23,6 +23,235 @@ function PlayerSystem:init(world) --onAddedToWorld(world))
     self.underwaterControllerX = PIDController(0.20, 0, 0.02, 60)
 end
 
+function PlayerSystem:update()
+    if not self:isEnabled() then
+        return
+    end
+
+    self:handleInput()
+
+    local world = self:getWorld()
+    local position = self.mario.position
+    local move = self.mario.moving_component
+
+    if FlagSystem:isClimbing() then
+        self.currentState = ANIMATION_STATE.SLIDING
+        self:setState(self.currentState)
+        self:updateCamera()
+        return
+    end
+
+    if WarpSystem:isWarping() then
+        if move.velocity.x ~= 0 then
+            self.currentState = ANIMATION_STATE.WALKING
+        end
+        if move.velocity.x == 0 or move.velocity.y ~= 0 then
+            self.currentState = ANIMATION_STATE.STANDING
+        end
+        self:setState(self.currentState)
+        self:updateCamera()
+        return
+    end
+
+    if WarpSystem:isClimbing() then
+        if move.velocity.y ~= 0 then
+            self.currentState = ANIMATION_STATE.CLIMBING
+        else
+            self.currentState = ANIMATION_STATE.SLIDING
+        end
+        self:setState(self.currentState)
+        self:updateCamera()
+        return
+    end
+
+    if not PlayerSystem.isInputEnabled() then
+        if self.scene:getLevelData().levelType == LEVEL_TYPE.START_UNDERGROUND and PlayerSystem:isGameStart() then
+            move.velocity.x = 1.6
+        end
+
+        if move.velocity.x ~= 0 and move.velocity.y == 0 then
+            self.currentState = ANIMATION_STATE.WALKING
+        elseif move.velocity.y ~= 0 then
+            self.currentState = ANIMATION_STATE.JUMPING
+        else
+            self.currentState = ANIMATION_STATE.STANDING
+        end
+
+        self:setState(self.currentState)
+        self:updateCamera()
+        return
+    end
+
+    if self.currentState ~= ANIMATION_STATE.GAMEOVER then 
+        self:checkGameTime()
+    end
+
+    if self.currentState ~= ANIMATION_STATE.GAMEOVER then  -- If the player isn't dead
+        if self.underwater then
+            self:updateWaterVelocity()
+        elseif self.mario:has('bottom_collision_component') then
+            self:updateGroundVelocity()
+        else
+            self:updateAirVelocity()
+        end
+    else
+        self:setState(ANIMATION_STATE.GAMEOVER)
+        return
+    end
+
+    -- Hold the launching texture
+    if self.holdFireballTexture > 0 then
+        self.currentState = ANIMATION_STATE.LAUNCH_FIREBALL
+    end
+
+    if position.position.y >= CameraInstance:getCameraY() + SCREEN_HEIGHT + SCALED_CUBE_SIZE and not self.mario:has('frozen_component') and not WarpSystem:hasClimbed() then
+        self:onGameOver(true)
+        return 
+    end
+
+    local platformMoved = false
+
+    --Move mario with the platforms
+    processEntitiesWithComponents(world, {'moving_platform_component', 'moving_component'}, 
+    function(entity)
+        if not AABBCollision(position, entity.position) or platformMoved then
+            return
+        end
+
+        local platformMove = entity.moving_component
+        position.position.x = position.position.x + platformMove.velocity.x
+        position.position.y = position.position.y + platformMove.velocity.y
+
+        if position.position.x + 16 > CameraInstance:getCameraCenterX() and platformMove.velocity.x > 0 then
+            CameraInstance:increaseCameraX(platformMove.velocity.x)
+        end
+
+        platformMoved = true
+    end)
+
+    self:checkTrampolineCollisions()
+
+    -- Launch fireballs
+    if self:isFireMario() and self.launchFireball > 0 then
+        self:createFireball()
+        self.launchFireball = 0
+        local fireballSound = Concord.entity(world)
+        fireballSound:give('sound_component', SOUND_ID.FIREBALL)
+    end
+
+    -- Enemy collision
+    self:checkEnemyCollisions()
+
+    -- Projectile Collision
+    local projectiles = world:getSystem(ProjectileSystem):getEntities()
+    for _, projectile in ipairs(projectiles) do
+        local projectilePosition = projectile.position
+        if projectile:has('position') then
+            if (not CameraInstance:inCameraRange(projectilePosition)) or (not AABBTotalCollision(position, projectilePosition) or self:isSuperStar() or (self.mario:has('ending_blink_component') or self.mario:has('frozen_component') or self.mario:has('particle'))) then
+            else
+                if projectile.projectile.type ~= PROJECTTILE_TYPE.FIREBALL then
+                    self:onGameOver(false)
+                end
+            end
+        end
+    end
+
+    -- Break blocks
+    processEntitiesWithComponents(world, {'bumpable_component', 'position', 'bottom_collision_component'}, 
+    function(breakable)
+        if move.velocity.y > 0 or not AABBCollision(breakable.position, position) or position.position.y < breakable.position.position.y then
+            return
+        end
+
+        -- Destroy the block if the player is Super Mario
+        if not self:isSmallMario() then
+            if not breakable:has('mystery_box_component') and breakable:has('destructible_component') and AABBCollision(breakable.position, position) then
+                -- This allows the enemy system to that the enemy should be destroyed, otherwise
+                -- the enemy will fall as normal
+                breakable:give('block_bump_component')
+                breakable:give('callback_component', 
+                function(breakable) 
+                    self:createBlockDebris(breakable)
+                    world:removeEntity(breakable)
+                    local breakSound = Concord.entity(world)
+                    breakSound:give('sound_component', SOUND_ID.BLOCK_BREAK)
+                end, 1)
+                return
+            end
+        end
+
+        -- If the player is in normal state, make the block bump
+        if not breakable:has('block_bump_component') then
+            breakable:give('block_bump_component', {-3, -3, -2, -1, 1, 2, 3, 3})
+            local bumpSound = Concord.entity(world)
+            bumpSound:give('sound_component', SOUND_ID.BLOCK_HIT)
+        end
+
+        breakable:remove('bottom_collision_component')
+        if breakable:has('mystery_box_component') then
+            local mysteryBox = breakable.mystery_box_component
+            if breakable:has('invisible_block_component') then
+                breakable:remove('invisible_block_component')
+                move.velocity.y = 0
+                move.acceleration.y = 0
+            end
+
+            mysteryBox.whenDispensed(breakable)
+            breakable:remove('animation_component')
+            breakable.spritesheet:setSpritesheetCoordinates(mysteryBox.deactivatedCoordinates)
+            breakable:remove('bumpable_component')
+        end
+    end)
+
+    local collectibles = world:getSystem(CollectibleSystem):getEntities()
+    for _, collectible in ipairs(collectibles) do
+        if collectible:has('position') then
+            if (not CameraInstance:inCameraRange(collectible.position)) or (not AABBTotalCollision(collectible.position, position)) then
+            else
+                local collect = collectible.collectible
+                local type = collect.collectibleType
+                if type == COLLECTIBLE_TYPE.MUSHROOM or type == COLLECTIBLE_TYPE.SUPER_STAR or type == COLLECTIBLE_TYPE.FIRE_FLOWER then
+                    self:grow(type)
+                    world:removeEntity(collectible)
+                elseif type == COLLECTIBLE_TYPE.COIN then
+                    local coinScore = Concord.entity(world)
+                    coinScore:give('add_score_component', 100, true)
+                    local coinSound = Concord.entity(world)
+                    coinSound:give('sound_component', SOUND_ID.COIN)
+                    self:grow(type)
+                    world:removeEntity(collectible)
+                elseif type == COLLECTIBLE_TYPE.ONE_UP then
+                    local coinSound = Concord.entity(world)
+                    coinSound:give('sound_component', SOUND_ID.COIN)
+                    self:grow(type)
+                    world:removeEntity(collectible)
+                end
+            end
+        end
+    end
+
+    self:updateCamera()
+    -- Updates the textures for whichever state the player is currently in
+    self:setState(self.currentState)
+
+    -- This resets the collision/jumping states to avoid conflicts during the next game tick
+    if self.mario:has('top_collision_component') then
+        self.mario:remove('top_collision_component')
+    end
+
+    if self.mario:has('right_collision_component') then
+        self.mario:remove('right_collision_component')
+    end
+
+    if self.mario:has('bottom_collision_component') then
+        self.mario:remove('bottom_collision_component')
+    end
+
+    if self.mario:has('left_collision_component') then
+        self.mario:remove('left_collision_component')
+    end
+end
+
 function PlayerSystem:setScene(scene)
     self.scene = scene
     local startCoordinates = self.scene:getLevelData().playerStart
@@ -548,235 +777,6 @@ function PlayerSystem:updateCamera()
                 CameraInstance:updateCameraMin()
             end
         end
-    end
-end
-
-function PlayerSystem:update()
-    if not self:isEnabled() then
-        return
-    end
-
-    self:handleInput()
-
-    local world = self:getWorld()
-    local position = self.mario.position
-    local move = self.mario.moving_component
-
-    if FlagSystem:isClimbing() then
-        self.currentState = ANIMATION_STATE.SLIDING
-        self:setState(self.currentState)
-        self:updateCamera()
-        return
-    end
-
-    if WarpSystem:isWarping() then
-        if move.velocity.x ~= 0 then
-            self.currentState = ANIMATION_STATE.WALKING
-        end
-        if move.velocity.x == 0 or move.velocity.y ~= 0 then
-            self.currentState = ANIMATION_STATE.STANDING
-        end
-        self:setState(self.currentState)
-        self:updateCamera()
-        return
-    end
-
-    if WarpSystem:isClimbing() then
-        if move.velocity.y ~= 0 then
-            self.currentState = ANIMATION_STATE.CLIMBING
-        else
-            self.currentState = ANIMATION_STATE.SLIDING
-        end
-        self:setState(self.currentState)
-        self:updateCamera()
-        return
-    end
-
-    if not PlayerSystem.isInputEnabled() then
-        if self.scene:getLevelData().levelType == LEVEL_TYPE.START_UNDERGROUND and PlayerSystem:isGameStart() then
-            move.velocity.x = 1.6
-        end
-
-        if move.velocity.x ~= 0 and move.velocity.y == 0 then
-            self.currentState = ANIMATION_STATE.WALKING
-        elseif move.velocity.y ~= 0 then
-            self.currentState = ANIMATION_STATE.JUMPING
-        else
-            self.currentState = ANIMATION_STATE.STANDING
-        end
-
-        self:setState(self.currentState)
-        self:updateCamera()
-        return
-    end
-
-    if self.currentState ~= ANIMATION_STATE.GAMEOVER then 
-        self:checkGameTime()
-    end
-
-    if self.currentState ~= ANIMATION_STATE.GAMEOVER then  -- If the player isn't dead
-        if self.underwater then
-            self:updateWaterVelocity()
-        elseif self.mario:has('bottom_collision_component') then
-            self:updateGroundVelocity()
-        else
-            self:updateAirVelocity()
-        end
-    else
-        self:setState(ANIMATION_STATE.GAMEOVER)
-        return
-    end
-
-    -- Hold the launching texture
-    if self.holdFireballTexture > 0 then
-        self.currentState = ANIMATION_STATE.LAUNCH_FIREBALL
-    end
-
-    if position.position.y >= CameraInstance:getCameraY() + SCREEN_HEIGHT + SCALED_CUBE_SIZE and not self.mario:has('frozen_component') and not WarpSystem:hasClimbed() then
-        self:onGameOver(true)
-        return 
-    end
-
-    local platformMoved = false
-
-    --Move mario with the platforms
-    processEntitiesWithComponents(world, {'moving_platform_component', 'moving_component'}, 
-    function(entity)
-        if not AABBCollision(position, entity.position) or platformMoved then
-            return
-        end
-
-        local platformMove = entity.moving_component
-        position.position.x = position.position.x + platformMove.velocity.x
-        position.position.y = position.position.y + platformMove.velocity.y
-
-        if position.position.x + 16 > CameraInstance:getCameraCenterX() and platformMove.velocity.x > 0 then
-            CameraInstance:increaseCameraX(platformMove.velocity.x)
-        end
-
-        platformMoved = true
-    end)
-
-    self:checkTrampolineCollisions()
-
-    -- Launch fireballs
-    if self:isFireMario() and self.launchFireball > 0 then
-        self:createFireball()
-        self.launchFireball = 0
-        local fireballSound = Concord.entity(world)
-        fireballSound:give('sound_component', SOUND_ID.FIREBALL)
-    end
-
-    -- Enemy collision
-    self:checkEnemyCollisions()
-
-    -- Projectile Collision
-    local projectiles = world:getSystem(ProjectileSystem):getEntities()
-    for _, projectile in ipairs(projectiles) do
-        local projectilePosition = projectile.position
-        if projectile:has('position') then
-            if (not CameraInstance:inCameraRange(projectilePosition)) or (not AABBTotalCollision(position, projectilePosition) or self:isSuperStar() or (self.mario:has('ending_blink_component') or self.mario:has('frozen_component') or self.mario:has('particle'))) then
-            else
-                if projectile.projectile.type ~= PROJECTTILE_TYPE.FIREBALL then
-                    self:onGameOver(false)
-                end
-            end
-        end
-    end
-
-    -- Break blocks
-    processEntitiesWithComponents(world, {'bumpable_component', 'position', 'bottom_collision_component'}, 
-    function(breakable)
-        if move.velocity.y > 0 or not AABBCollision(breakable.position, position) or position.position.y < breakable.position.position.y then
-            return
-        end
-
-        -- Destroy the block if the player is Super Mario
-        if not self:isSmallMario() then
-            if not breakable:has('mystery_box_component') and breakable:has('destructible_component') and AABBCollision(breakable.position, position) then
-                -- This allows the enemy system to that the enemy should be destroyed, otherwise
-                -- the enemy will fall as normal
-                breakable:give('block_bump_component')
-                breakable:give('callback_component', 
-                function(breakable) 
-                    self:createBlockDebris(breakable)
-                    world:removeEntity(breakable)
-                    local breakSound = Concord.entity(world)
-                    breakSound:give('sound_component', SOUND_ID.BLOCK_BREAK)
-                end, 1)
-                return
-            end
-        end
-
-        -- If the player is in normal state, make the block bump
-        if not breakable:has('block_bump_component') then
-            breakable:give('block_bump_component', {-3, -3, -2, -1, 1, 2, 3, 3})
-            local bumpSound = Concord.entity(world)
-            bumpSound:give('sound_component', SOUND_ID.BLOCK_HIT)
-        end
-
-        breakable:remove('bottom_collision_component')
-        if breakable:has('mystery_box_component') then
-            local mysteryBox = breakable.mystery_box_component
-            if breakable:has('invisible_block_component') then
-                breakable:remove('invisible_block_component')
-                move.velocity.y = 0
-                move.acceleration.y = 0
-            end
-
-            mysteryBox.whenDispensed(breakable)
-            breakable:remove('animation_component')
-            breakable.spritesheet:setSpritesheetCoordinates(mysteryBox.deactivatedCoordinates)
-            breakable:remove('bumpable_component')
-        end
-    end)
-
-    local collectibles = world:getSystem(CollectibleSystem):getEntities()
-    for _, collectible in ipairs(collectibles) do
-        if collectible:has('position') then
-            if (not CameraInstance:inCameraRange(collectible.position)) or (not AABBTotalCollision(collectible.position, position)) then
-            else
-                local collect = collectible.collectible
-                local type = collect.collectibleType
-                if type == COLLECTIBLE_TYPE.MUSHROOM or type == COLLECTIBLE_TYPE.SUPER_STAR or type == COLLECTIBLE_TYPE.FIRE_FLOWER then
-                    self:grow(type)
-                    world:removeEntity(collectible)
-                elseif type == COLLECTIBLE_TYPE.COIN then
-                    local coinScore = Concord.entity(world)
-                    coinScore:give('add_score_component', 100, true)
-                    local coinSound = Concord.entity(world)
-                    coinSound:give('sound_component', SOUND_ID.COIN)
-                    self:grow(type)
-                    world:removeEntity(collectible)
-                elseif type == COLLECTIBLE_TYPE.ONE_UP then
-                    local coinSound = Concord.entity(world)
-                    coinSound:give('sound_component', SOUND_ID.COIN)
-                    self:grow(type)
-                    world:removeEntity(collectible)
-                end
-            end
-        end
-    end
-
-    self:updateCamera()
-    -- Updates the textures for whichever state the player is currently in
-    self:setState(self.currentState)
-
-    -- This resets the collision/jumping states to avoid conflicts during the next game tick
-    if self.mario:has('top_collision_component') then
-        self.mario:remove('top_collision_component')
-    end
-
-    if self.mario:has('right_collision_component') then
-        self.mario:remove('right_collision_component')
-    end
-
-    if self.mario:has('bottom_collision_component') then
-        self.mario:remove('bottom_collision_component')
-    end
-
-    if self.mario:has('left_collision_component') then
-        self.mario:remove('left_collision_component')
     end
 end
 

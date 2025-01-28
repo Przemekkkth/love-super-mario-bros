@@ -12,58 +12,6 @@ function WarpSystem:init(world)
     self.right = 0
 end
 
-function WarpSystem:setScene(scene)
-    self.scene = scene
-end
-
-function WarpSystem:isWarping()
-    return WarpSystem.warping
-end
-
-function WarpSystem:isClimbing()
-    return WarpSystem.climbing
-end
-
-function WarpSystem:hasClimbed()
-    return WarpSystem.climbed
-end
-
-function WarpSystem:setWarping(val)
-    WarpSystem.warping = val
-end
-
-function WarpSystem:setClimbing(val)
-    WarpSystem.climbing = val
-end
-
-function WarpSystem:setClimbed(val)
-    WarpSystem.climbed = val
-end
-
-function WarpSystem:setTeleportLevelY(levelY)
-    self.teleportLevelY = levelY
-end
-
-function WarpSystem:setTeleportPlayerCoordinates(playerCoordinates)
-    self.teleportPlayerCoordinates = playerCoordinates
-end
-
-function WarpSystem:setTeleportCameraCoordinates(cameraCoordinates)
-    self.teleportCameraCoordinates = cameraCoordinates
-end
-
-function WarpSystem:setTeleportCameraMax(cameraMax)
-    self.teleportCameraMax = cameraMax
-end
-
-function WarpSystem:setTeleportBackgroundColor(backgroundColor)
-    self.teleportBackgroundColor = backgroundColor
-end
-
-function WarpSystem:setTeleportLevelType(levelType)
-    self.teleportLevelType = levelType
-end
-
 function WarpSystem:update()
     if not self:isEnabled() then
         return
@@ -174,6 +122,58 @@ function WarpSystem:update()
             ))
         end
     end
+end
+
+function WarpSystem:setScene(scene)
+    self.scene = scene
+end
+
+function WarpSystem:isWarping()
+    return WarpSystem.warping
+end
+
+function WarpSystem:isClimbing()
+    return WarpSystem.climbing
+end
+
+function WarpSystem:hasClimbed()
+    return WarpSystem.climbed
+end
+
+function WarpSystem:setWarping(val)
+    WarpSystem.warping = val
+end
+
+function WarpSystem:setClimbing(val)
+    WarpSystem.climbing = val
+end
+
+function WarpSystem:setClimbed(val)
+    WarpSystem.climbed = val
+end
+
+function WarpSystem:setTeleportLevelY(levelY)
+    self.teleportLevelY = levelY
+end
+
+function WarpSystem:setTeleportPlayerCoordinates(playerCoordinates)
+    self.teleportPlayerCoordinates = playerCoordinates
+end
+
+function WarpSystem:setTeleportCameraCoordinates(cameraCoordinates)
+    self.teleportCameraCoordinates = cameraCoordinates
+end
+
+function WarpSystem:setTeleportCameraMax(cameraMax)
+    self.teleportCameraMax = cameraMax
+end
+
+function WarpSystem:setTeleportBackgroundColor(backgroundColor)
+    self.teleportBackgroundColor = backgroundColor
+end
+
+function WarpSystem:setTeleportLevelType(levelType)
+    self.teleportLevelType = levelType
 end
 
 function WarpSystem:handleInput()
