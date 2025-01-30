@@ -1,6 +1,12 @@
 MapSystem = Concord.system()
 
 MapSystem.INVALID_CODE = -1
+MapSystem.FLAG_POLE1 = 101
+MapSystem.COIN_CODE1 = 144
+MapSystem.FLAG_POLE2 = 149 
+MapSystem.COIN_CODE2 = 176
+MapSystem.FLAG_CODE = 152
+MapSystem.AXE_CODE = 240
 
 
 function MapSystem:init(world)
@@ -20,27 +26,32 @@ function MapSystem:loadEntities()
     self:createEnemyEntities()
     self:createAboveForegroundEntities()
     self:createFloatingTextEntities()
-    -- Set the camera max (i don't know where to put this)
-    CameraInstance:setCameraMaxX(self.scene:getLevelData():getCameraMax() * SCALED_CUBE_SIZE)
 end
 
 function MapSystem:createBackgroundEntities()
     local backgroundMap = self.scene:getBackgroundMap()
-    for i = 1, #backgroundMap:getLevelData() do
-        for j = 1, #backgroundMap:getLevelData()[1] do
-            local entityID = backgroundMap:getLevelData()[i][j]
+    local mapHeight = #backgroundMap:getLevelData()
+    local mapWidth  = #backgroundMap:getLevelData()[1]
+
+    for y = 1, mapHeight do
+        for x = 1, mapWidth do
+            local entityID = backgroundMap:getLevelData()[y][x]
             local referenceID = self:getReferenceBlockID(entityID)
 
-            if referenceID ~= -1 and referenceID ~= 391 and referenceID ~= 393 then
-                local entity = Concord.entity(self.world)
-                entity:give('position', {x = (j - 1) * SCALED_CUBE_SIZE, y = (i - 1) * SCALED_CUBE_SIZE}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
-                entity:give('texture', BLOCK_TILESHEET_IMG, false, false)
-                entity:give('spritesheet', entity.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE, 1, 1, 1, ORIGINAL_CUBE_SIZE,
-                                           ORIGINAL_CUBE_SIZE, MapInstance:getBlockCoord(entityID) )
-                entity:give('background')
+            if referenceID ~= MapSystem.INVALID_CODE and referenceID ~= 391 and referenceID ~= 393 then
+                self:createBackgroundEntity(x, y, entityID)
             end
         end
     end
+end
+
+function MapSystem:createBackgroundEntity(x, y, entityID)
+    local entity = Concord.entity(self.world)
+    entity:give('position', {x = (x - 1) * SCALED_CUBE_SIZE, y = (y - 1) * SCALED_CUBE_SIZE}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
+    entity:give('texture', BLOCK_TILESHEET_IMG, false, false)
+    entity:give('spritesheet', entity.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE, 1, 1, 1, ORIGINAL_CUBE_SIZE,
+                               ORIGINAL_CUBE_SIZE, MapInstance:getBlockCoord(entityID) )
+    entity:give('background')
 end
 
 function MapSystem:createUndergroundEntities()
@@ -150,10 +161,10 @@ function MapSystem:createFloatingTextEntities()
     end
 end
 
---Gets the Block ID that is equivalent to its ID in the Overworld
+--Gets the Block ID that is equivalent to its ID in the Overworld(see BlockTileSheet.png)
 function MapSystem:getReferenceBlockID(entityID)
-    if entityID == -1 then
-        return -1
+    if entityID == MapSystem.INVALID_CODE then
+        return MapSystem.INVALID_CODE
     end
 
     local irregularBlockReferences = MapInstance:getIrregularBlockReferences()
@@ -164,15 +175,17 @@ function MapSystem:getReferenceBlockID(entityID)
     local blockIDCoordinate = MapInstance:getBlockIDCoordinates()[entityID]
     local coordinateX = blockIDCoordinate.x 
     local coordinateY = blockIDCoordinate.y
+    local mapWorldWidthInTiles = 16
+    local mapWorldHeightInTiles = 10
 
-    if coordinateY > 10 and blockIDCoordinate.x < 32 then
-        coordinateY = coordinateY - 11
+    if coordinateY > mapWorldHeightInTiles and blockIDCoordinate.x < 2 * mapWorldWidthInTiles then
+        coordinateY = coordinateY - mapWorldHeightInTiles - 1
     end
 
-    if coordinateX > 15 and coordinateX < 32 then
-        coordinateX = coordinateX - 16
-    elseif coordinateX > 32 and blockIDCoordinate.y < 10 then
-        coordinateX = coordinateX - 32
+    if coordinateX >= mapWorldWidthInTiles and coordinateX < 2 * mapWorldWidthInTiles then
+        coordinateX = coordinateX - mapWorldWidthInTiles
+    elseif coordinateX > 2 * mapWorldWidthInTiles and blockIDCoordinate.y < mapWorldHeightInTiles then
+        coordinateX = coordinateX - 2 * mapWorldWidthInTiles
     end
 
     for key, blockIDCoord in ipairs(MapInstance:getBlockIDCoordinates()) do
@@ -181,7 +194,7 @@ function MapSystem:getReferenceBlockID(entityID)
         end
     end
 
-    return -1
+    return MapSystem.INVALID_CODE
 end
 
 function MapSystem:createForegroundEntity(coordinateX, coordinateY, entityID, referenceID, createInvisibleBlocks)
@@ -226,20 +239,8 @@ function MapSystem:createForegroundEntity(coordinateX, coordinateY, entityID, re
                 self:addItemDispenser(entity, blankBlockID, 53);
             end
         end
-    elseif referenceID == 144 or referenceID == 176 then -- COIN
-        local entity = Concord.entity(world)
-        entity:give('position', {x = (coordinateX - 1) * SCALED_CUBE_SIZE, y = (coordinateY - 1) * SCALED_CUBE_SIZE}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
-        entity:give('texture', BLOCK_TILESHEET_IMG)
-        entity:give('spritesheet', entity.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE, 1, 1, 1,
-                ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE,
-                MapInstance:getBlockCoord(entityID))
-        
-        entity:give('animation_component', 
-                    {entityID, entityID + 1, entityID + 2, entityID + 3}, --frameIDs
-                    8,                                   --framesPerSecond
-                    MapInstance.BlockIDCoordinates)      --coordinateSupplier
-        entity:give('pause_animation_component', 1, 25)
-        entity:give('collectible', COLLECTIBLE_TYPE.COIN)
+    elseif referenceID == MapSystem.COIN_CODE1 or referenceID == MapSystem.COIN_CODE2 then -- COIN
+        self:createCoin(coordinateX, coordinateY, entityID)
     elseif referenceID == 63 then -- BULLET BILL CANNON
         local entity = self:createBlockEntity(coordinateX, coordinateY, entityID)
         local bulletBillID
@@ -286,24 +287,10 @@ function MapSystem:createForegroundEntity(coordinateX, coordinateY, entityID, re
 
             bulletBill:give('enemy', ENEMY_TYPE.BULLET_BILL)
         end, 4 * MAX_FPS)
-    elseif referenceID == 149 or referenceID == 101 then -- FLAG POLE
-        local entity = Concord.entity(world)
-        entity:give('position', {x = (coordinateX - 1) * SCALED_CUBE_SIZE, y = (coordinateY - 1) * SCALED_CUBE_SIZE}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
-        entity:give('texture', BLOCK_TILESHEET_IMG, false, false)   
-        entity:give('spritesheet', entity.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE, 1, 1, 1, ORIGINAL_CUBE_SIZE,
-                                                       ORIGINAL_CUBE_SIZE, MapInstance:getBlockCoord(entityID) )
-        entity:give('foreground')
-        entity:give('flag_pole_component')
-    elseif referenceID == 152 then -- FLAG
-        local entity = Concord.entity(world)
-        entity:give('position', {x = (coordinateX - 1) * SCALED_CUBE_SIZE + SCALED_CUBE_SIZE / 2, y = (coordinateY - 1) * SCALED_CUBE_SIZE}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
-        entity:give('texture', BLOCK_TILESHEET_IMG, false, false)   
-        entity:give('spritesheet', entity.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE, 1, 1, 1, ORIGINAL_CUBE_SIZE,
-                                                       ORIGINAL_CUBE_SIZE, MapInstance:getBlockCoord(entityID) )
-        
-        entity:give('moving_component', {x = 0, y = 0}, {x = 0, y = 0})
-        entity:give('foreground')
-        entity:give('flag_component')
+    elseif referenceID == MapSystem.FLAG_POLE1 or referenceID == MapSystem.FLAG_POLE2 then -- FLAG POLE
+        self:createFlagPole(coordinateX, coordinateY, entityID)
+    elseif referenceID == MapSystem.FLAG_CODE then -- FLAG
+        self:createFlag(coordinateX, coordinateY, entityID)
     elseif referenceID == 192 then -- QUESTION BLOCK   
         local entity = self:createBlockEntity(coordinateX, coordinateY, entityID)
         entity:give('animation_component', 
@@ -334,20 +321,8 @@ function MapSystem:createForegroundEntity(coordinateX, coordinateY, entityID, re
             entity:give('mystery_box_component', collectibleType)
             self:addItemDispenser(entity, entityID, referenceID)
         end
-    elseif referenceID == 240 then -- AXE  
-        local entity = Concord.entity(world)
-        entity:give('position', {x = (coordinateX - 1) * SCALED_CUBE_SIZE, y = (coordinateY - 1) * SCALED_CUBE_SIZE}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
-        entity:give('texture', BLOCK_TILESHEET_IMG, false, false)
-        entity:give('spritesheet', entity.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE, 1, 1, 1, ORIGINAL_CUBE_SIZE,
-                                                   ORIGINAL_CUBE_SIZE, MapInstance:getBlockCoord(entityID) )
-        entity:give('animation_component', 
-                        {entityID, entityID + 1, entityID + 2, entityID + 3}, --frameIDs
-                        8,                                   --framesPerSecond
-                        MapInstance.BlockIDCoordinates)      --coordinateSupplier
-                                               
-        entity:give('pause_animation_component', 1, 25)
-        entity:give('foreground')
-        entity:give('axe_component')
+    elseif referenceID == MapSystem.AXE_CODE then -- AXE  
+        self:createAxe(coordinateX, coordinateY, entityID)
     elseif referenceID == 289 or referenceID == 290 then -- BRICKS
         local entity = self:createBlockEntity(coordinateX, coordinateY, entityID)
         local debrisID = self:getReferenceBlockIDAsEntity(entityID, 291)
@@ -470,6 +445,60 @@ function MapSystem:createForegroundEntity(coordinateX, coordinateY, entityID, re
     else
         self:createBlockEntity(coordinateX, coordinateY, entityID)
     end
+end
+
+function MapSystem:createCoin(x, y, entityID)
+    local entity = Concord.entity(self.world)
+    entity:give('position', {x = (x - 1) * SCALED_CUBE_SIZE, y = (y - 1) * SCALED_CUBE_SIZE}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
+    entity:give('texture', BLOCK_TILESHEET_IMG)
+    entity:give('spritesheet', entity.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE, 1, 1, 1,
+            ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE,
+            MapInstance:getBlockCoord(entityID))
+    
+    entity:give('animation_component', 
+                {entityID, entityID + 1, entityID + 2, entityID + 3}, --frameIDs
+                8,                                   --framesPerSecond
+                MapInstance.BlockIDCoordinates)      --coordinateSupplier
+    entity:give('pause_animation_component', 1, 25)
+    entity:give('collectible', COLLECTIBLE_TYPE.COIN)
+end
+
+function MapSystem:createFlagPole(x, y, entityID)
+    local entity = Concord.entity(self.world)
+    entity:give('position', {x = (x - 1) * SCALED_CUBE_SIZE, y = (y - 1) * SCALED_CUBE_SIZE}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
+    entity:give('texture', BLOCK_TILESHEET_IMG, false, false)   
+    entity:give('spritesheet', entity.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE, 1, 1, 1, ORIGINAL_CUBE_SIZE,
+                                                   ORIGINAL_CUBE_SIZE, MapInstance:getBlockCoord(entityID) )
+    entity:give('foreground')
+    entity:give('flag_pole_component')
+end
+
+function MapSystem:createFlag(x, y, entityID)
+    local entity = Concord.entity(self.world)
+    entity:give('position', {x = (x - 1) * SCALED_CUBE_SIZE + SCALED_CUBE_SIZE / 2, y = (y - 1) * SCALED_CUBE_SIZE}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
+    entity:give('texture', BLOCK_TILESHEET_IMG, false, false)   
+    entity:give('spritesheet', entity.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE, 1, 1, 1, ORIGINAL_CUBE_SIZE,
+                                                   ORIGINAL_CUBE_SIZE, MapInstance:getBlockCoord(entityID) )
+    
+    entity:give('moving_component', {x = 0, y = 0}, {x = 0, y = 0})
+    entity:give('foreground')
+    entity:give('flag_component')
+end
+
+function MapSystem:createAxe(x, y, entityID)
+    local entity = Concord.entity(self.world)
+    entity:give('position', {x = (x - 1) * SCALED_CUBE_SIZE, y = (y - 1) * SCALED_CUBE_SIZE}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
+    entity:give('texture', BLOCK_TILESHEET_IMG, false, false)
+    entity:give('spritesheet', entity.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE, 1, 1, 1, ORIGINAL_CUBE_SIZE,
+                                               ORIGINAL_CUBE_SIZE, MapInstance:getBlockCoord(entityID) )
+    entity:give('animation_component', 
+                    {entityID, entityID + 1, entityID + 2, entityID + 3}, --frameIDs
+                    8,                                   --framesPerSecond
+                    MapInstance.BlockIDCoordinates)      --coordinateSupplier
+                                           
+    entity:give('pause_animation_component', 1, 25)
+    entity:give('foreground')
+    entity:give('axe_component')
 end
 
 function MapSystem:createBlockEntity(coordinateX, coordinateY, entityID)
