@@ -1,7 +1,10 @@
 MapSystem = Concord.system()
 
-function MapSystem:init(world) --onAddedToWorld(world))
+MapSystem.INVALID_CODE = -1
 
+
+function MapSystem:init(world)
+    self.world = world
 end
 
 function MapSystem:setScene(scene)
@@ -9,7 +12,19 @@ function MapSystem:setScene(scene)
 end
 
 function MapSystem:loadEntities()
-    local world = self:getWorld()
+    self:createBackgroundEntities()
+    self:createUndergroundEntities()
+    self:addPlatformsLevel()
+    self:createForegroundEntities()
+    self:createFireBarEntities()
+    self:createEnemyEntities()
+    self:createAboveForegroundEntities()
+    self:createFloatingTextEntities()
+    -- Set the camera max (i don't know where to put this)
+    CameraInstance:setCameraMaxX(self.scene:getLevelData():getCameraMax() * SCALED_CUBE_SIZE)
+end
+
+function MapSystem:createBackgroundEntities()
     local backgroundMap = self.scene:getBackgroundMap()
     for i = 1, #backgroundMap:getLevelData() do
         for j = 1, #backgroundMap:getLevelData()[1] do
@@ -17,7 +32,7 @@ function MapSystem:loadEntities()
             local referenceID = self:getReferenceBlockID(entityID)
 
             if referenceID ~= -1 and referenceID ~= 391 and referenceID ~= 393 then
-                local entity = Concord.entity(world)
+                local entity = Concord.entity(self.world)
                 entity:give('position', {x = (j - 1) * SCALED_CUBE_SIZE, y = (i - 1) * SCALED_CUBE_SIZE}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
                 entity:give('texture', BLOCK_TILESHEET_IMG, false, false)
                 entity:give('spritesheet', entity.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE, 1, 1, 1, ORIGINAL_CUBE_SIZE,
@@ -26,29 +41,31 @@ function MapSystem:loadEntities()
             end
         end
     end
+end
 
+function MapSystem:createUndergroundEntities()
     local undergroundMap = self.scene:getUndergroundMap()
     for i = 1, #undergroundMap:getLevelData() do
         for j = 1, #undergroundMap:getLevelData()[1] do
             local entityID = undergroundMap:getLevelData()[i][j]
             local referenceID = self:getReferenceBlockID(entityID)
-            self:createForegroundEntities(j, i, entityID, referenceID, false) -- TO DO why shouldn't be true ?
+            self:createForegroundEntity(j, i, entityID, referenceID, false) -- TO DO why shouldn't be true ?
         end
     end
+end
 
-    self:addPlatformsLevel()
-
+function MapSystem:createForegroundEntities()
     local foregroundMap = self.scene:getForegroundMap()
     for i = 1, #foregroundMap:getLevelData() do
         for j = 1, #foregroundMap:getLevelData()[1] do
             local entityID = foregroundMap:getLevelData()[i][j]
             local referenceID = self:getReferenceBlockID(entityID)
-            self:createForegroundEntities(j, i, entityID, referenceID, true)
+            self:createForegroundEntity(j, i, entityID, referenceID, true)
         end
     end
+end
 
-    self:createFireBarEntities()
-
+function MapSystem:createEnemyEntities()
     local enemyMap = self.scene:getEnemiesMap()
     for i = 1, #enemyMap:getLevelData() do
         for j = 1, #enemyMap:getLevelData()[1] do
@@ -56,18 +73,20 @@ function MapSystem:loadEntities()
             local referenceID = self:getReferenceEnemyID(entityID)
             if entityID ~= -1 or entityID ~= 73 or entityID ~= 83 or entityID ~= 85 or entityID ~= 85 or entityID ~= 91 or
                 entityID ~= 490 or entityID ~= 492 or entityID ~= 496 then
-                    self:createEnemyEntities(j, i, entityID, referenceID)
+                    self:createEnemyEntity(j, i, entityID, referenceID)
             end
         end
     end
+end
 
+function MapSystem:createAboveForegroundEntities()
     local aboveForegroundMap = self.scene:getAboveForegroundMap()
     for i = 1, #aboveForegroundMap:getLevelData() do
         for j = 1, #aboveForegroundMap:getLevelData()[1] do
             local entityID = aboveForegroundMap:getLevelData()[i][j]
             local referenceID = self:getReferenceBlockID(entityID)
             if referenceID == 150 or referenceID == 292 then -- WARP Pipe
-                local entity = Concord.entity(world)
+                local entity = Concord.entity(self.world)
                 entity:give('position', {x = (j-1) * SCALED_CUBE_SIZE, y = (i - 1) * SCALED_CUBE_SIZE}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
                 entity:give('texture', BLOCK_TILESHEET_IMG, false, false)
                 entity:give('spritesheet', entity.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE, 1, 1, 1, ORIGINAL_CUBE_SIZE,
@@ -110,7 +129,7 @@ function MapSystem:loadEntities()
 
                 entity:give('above_foreground')
             elseif referenceID ~= -1 then
-                local entity = Concord.entity(world)
+                local entity = Concord.entity(self.world)
                 entity:give('position', {x = (j-1) * SCALED_CUBE_SIZE, y = (i-1) * SCALED_CUBE_SIZE}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
                 entity:give('texture', BLOCK_TILESHEET_IMG, false, false)
                 entity:give('spritesheet', entity.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE, 1, 1, 1, ORIGINAL_CUBE_SIZE,
@@ -120,15 +139,15 @@ function MapSystem:loadEntities()
 
         end
     end
+end
 
+function MapSystem:createFloatingTextEntities()
     for _, floatingText in ipairs(self.scene:getLevelData().floatingTextLocations) do
-        local text = Concord.entity(world)
+        local text = Concord.entity(self.world)
         text:give('position', {x = floatingText.pos[1] * SCALED_CUBE_SIZE, y = floatingText.pos[2] * SCALED_CUBE_SIZE})
         text:give('text', floatingText.text, 16, true)
         text:give('floating_text')
     end
-    -- Set the camera max (i don't know where to put this)
-    CameraInstance:setCameraMaxX(self.scene:getLevelData():getCameraMax() * SCALED_CUBE_SIZE)
 end
 
 --Gets the Block ID that is equivalent to its ID in the Overworld
@@ -165,7 +184,7 @@ function MapSystem:getReferenceBlockID(entityID)
     return -1
 end
 
-function MapSystem:createForegroundEntities(coordinateX, coordinateY, entityID, referenceID, createInvisibleBlocks)
+function MapSystem:createForegroundEntity(coordinateX, coordinateY, entityID, referenceID, createInvisibleBlocks)
     local world = self:getWorld()
     local collectiblesMap = self.scene:getCollectiblesMap()
     if referenceID == -1 then
@@ -819,7 +838,7 @@ function MapSystem:getReferenceEnemyID(entityID)
     return -1
 end
 
-function MapSystem:createEnemyEntities(coordinateX, coordinateY, entityID, referenceID)
+function MapSystem:createEnemyEntity(coordinateX, coordinateY, entityID, referenceID)
     local world = self:getWorld()
     if referenceID == 38 then -- KOOPA
         local entity = Concord.entity(world)
