@@ -236,7 +236,7 @@ function MapSystem:createForegroundEntity(coordinateX, coordinateY, entityID, re
 
             if collectibleType ~= MYSTERY_BOX_TYPE.NONE then
                 entity:give('mystery_box_component', collectibleType)
-                self:addItemDispenser(entity, blankBlockID, 53);
+                self:addItemDispenser(entity, blankBlockID);
             end
         end
     elseif referenceID == MapSystem.COIN_CODE1 or referenceID == MapSystem.COIN_CODE2 then -- COIN
@@ -319,7 +319,7 @@ function MapSystem:createForegroundEntity(coordinateX, coordinateY, entityID, re
 
         if collectibleType ~= MYSTERY_BOX_TYPE.NONE then
             entity:give('mystery_box_component', collectibleType)
-            self:addItemDispenser(entity, entityID, referenceID)
+            self:addItemDispenser(entity, entityID)
         end
     elseif referenceID == MapSystem.AXE_CODE then -- AXE  
         self:createAxe(coordinateX, coordinateY, entityID)
@@ -347,7 +347,7 @@ function MapSystem:createForegroundEntity(coordinateX, coordinateY, entityID, re
 
         if boxType ~= MYSTERY_BOX_TYPE.NONE then
             entity:give('mystery_box_component', boxType)
-            self:addItemDispenser(entity, entityID, referenceID)
+            self:addItemDispenser(entity, entityID)
         end
     elseif referenceID == 339 then -- BRIDGE CHAIN (this is here so it gets destroyed with the bridge
         if self.scene:getLevelData():getLevelType() == LEVEL_TYPE.CASTLE then
@@ -548,175 +548,20 @@ function MapSystem:getReferenceBlockIDAsEntity(entityID, referenceID)
     return -1
 end
 
-function MapSystem:addItemDispenser(entity, entityID, referenceID)
+function MapSystem:addItemDispenser(entity, entityID)
     local world = self:getWorld()
     local mysteryBox = entity.mystery_box_component
     local blockTexture = BLOCK_TILESHEET_IMG
     local deactivatedID = self:getReferenceBlockIDAsEntity(entityID, 196)
     mysteryBox.deactivatedCoordinates = MapInstance:getBlockCoord(deactivatedID)
     if mysteryBox.type == MYSTERY_BOX_TYPE.MUSHROOM then
-        mysteryBox.whenDispensed = function(originalBlock) 
-            local dispenseSound = Concord.entity(world)
-            dispenseSound:give('sound_component', SOUND_ID.POWER_UP_APPEAR)
-
-            local player = world:getSystem(PlayerSystem):getMario().player
-
-            if player.playerState ~= PLAYER_STATE.SMALL_MARIO then 
-                local fireFlower = Concord.entity(world)
-                local position   = originalBlock.position
-                local yOffset = -4 -- add to avoid collison during brick bumps
-                fireFlower:give('position', {x = position.position.x, y = position.position.y + yOffset}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
-                local flowerID = self:getReferenceBlockIDAsEntity(entityID, 48)
-                fireFlower:give('texture', BLOCK_TILESHEET_IMG)
-                fireFlower:give('spritesheet', fireFlower.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE, 1, 1, 1, ORIGINAL_CUBE_SIZE,
-                                               ORIGINAL_CUBE_SIZE, MapInstance:getBlockCoord(flowerID))
-
-                fireFlower:give('animation_component', 
-                                {flowerID, flowerID + 1, flowerID + 2, flowerID + 3}, --frameIDs
-                                 8,                                   --framesPerSecond
-                                 MapInstance.BlockIDCoordinates)      --coordinateSupplier
-                
-                fireFlower:give('collectible', COLLECTIBLE_TYPE.FIRE_FLOWER)
-                fireFlower:give('moving_component', {x = 0, y = -1}, {x = 0, y = 0})
-                fireFlower:give('collision_exempt_component')
-                fireFlower:give('wait_until_component', 
-                    function(entity)
-                        return position:getTop() > entity.position:getBottom()
-                    end,
-                    function(entity)
-                        entity:give('gravity_component')
-                        entity.moving_component.velocity.y = 0
-                        entity:remove('collision_exempt_component')
-                        entity:remove('wait_until_component')
-                    end)
-            else
-                local mushroom = Concord.entity(world)
-                local position   = originalBlock.position
-                local yOffset = -4 -- add to avoid collison during brick bumps
-                mushroom:give('position', {x = position.position.x, y = position.position.y + yOffset}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
-                local flowerID = self:getReferenceBlockIDAsEntity(entityID, 48)
-                mushroom:give('texture', BLOCK_TILESHEET_IMG)
-                mushroom:give('spritesheet', mushroom.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE, 1, 1, 1, ORIGINAL_CUBE_SIZE,
-                                               ORIGINAL_CUBE_SIZE, MapInstance:getBlockCoord(608))
-                
-                mushroom:give('collectible', COLLECTIBLE_TYPE.MUSHROOM)
-                mushroom:give('moving_component', {x = 0, y = -1}, {x = 0, y = 0})
-                mushroom:give('collision_exempt_component')
-                mushroom:give('wait_until_component', 
-                    function(entity)
-                        return position:getTop() > entity.position:getBottom()
-                    end,
-                    function(entity)
-                        entity:give('gravity_component')
-                        entity.moving_component.velocity.x = COLLECTIBLE_SPEED
-                        entity:remove('collision_exempt_component')
-                        entity:remove('wait_until_component')
-                    end)
-            end
-        end
+        mysteryBox.whenDispensed = self:dispenseMushroomOrFlower(entityID)
     elseif mysteryBox.type == MYSTERY_BOX_TYPE.COINS then
-        mysteryBox.whenDispensed = function(originalBlock)
-            local coinSound = Concord.entity(world)
-            coinSound:give('sound_component', SOUND_ID.COIN)
-            local addScore = Concord.entity(world)
-            addScore:give('add_score_component', 100, true)
-
-            local floatingText = Concord.entity(world)
-            floatingText:give('create_floating_text_component', originalBlock, tostring(100))
-
-            local coin = Concord.entity(world)
-            local position = originalBlock.position
-            coin:give('position', {x = position.position.x, y = position.position.y}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
-            coin:give('texture', BLOCK_TILESHEET_IMG)
-            coin:give('spritesheet', coin.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE, 1, 1,
-                                                1, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE,
-                                                MapInstance:getBlockCoord(656))
-            
-            coin:give('foreground')
-
-            coin:give('animation_component', 
-            {656, 657, 658, 659},                 --frameIDs
-             8,                                   --framesPerSecond
-             MapInstance.BlockIDCoordinates)      --coordinateSupplier
-
-            coin:give('gravity_component')
-            coin:give('moving_component', {x = 0, y = -10}, {x = 0, y = 0.3})
-            coin:give('particle')
-
-            coin:give('wait_until_component', 
-            function(e)
-                return AABBCollision(position, e.position) and e.moving_component.velocity.y >= 0
-            end,
-            function(e)
-                world:removeEntity(e)
-            end
-            )
-        end
+        mysteryBox.whenDispensed = self:dispenseCoin(entityID)
     elseif mysteryBox.type == MYSTERY_BOX_TYPE.SUPER_STAR then
-        mysteryBox.whenDispensed = function(originalBlock)
-            local dispenseSound = Concord.entity(world)
-            dispenseSound:give('sound_component', SOUND_ID.POWER_UP_APPEAR)
-
-            local star = Concord.entity(world)
-            local position   = originalBlock.position
-            local yOffset = -4 -- add to avoid collison during brick bumps
-
-            star:give('position', {x = position.position.x, y = position.position.y + yOffset}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
-            local starID = self:getReferenceBlockIDAsEntity(entityID, 96)
-            star:give('texture', BLOCK_TILESHEET_IMG)
-            star:give('spritesheet', star.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE, 1, 1, 1, ORIGINAL_CUBE_SIZE,
-                                           ORIGINAL_CUBE_SIZE, MapInstance:getBlockCoord(starID))
-            
-            star:give('collectible', COLLECTIBLE_TYPE.SUPER_STAR)
-            star:give('animation_component', 
-            {starID, starID + 1, starID + 2, starID + 3},   --frameIDs
-             8,                                             --framesPerSecond
-             MapInstance.BlockIDCoordinates)                --coordinateSupplier
-
-
-            star:give('moving_component', {x = 0, y = -1}, {x = 0, y = 0})
-            star:give('collision_exempt_component')
-            star:give('wait_until_component', 
-                function(entity)
-                    return position:getTop() > entity.position:getBottom()
-                end,
-                function(entity)
-                    entity:give('gravity_component')
-                    entity.moving_component.velocity.x = COLLECTIBLE_SPEED
-                    entity:remove('collision_exempt_component')
-                    entity:remove('wait_until_component')
-                end)
-        end
+        mysteryBox.whenDispensed = self:dispenseSuperStar(entityID)
     elseif mysteryBox.type == MYSTERY_BOX_TYPE.ONE_UP then
-        mysteryBox.whenDispensed = function(originalBlock)
-            local dispenseSound = Concord.entity(world)
-            dispenseSound:give('sound_component', SOUND_ID.POWER_UP_APPEAR)
-            local oneup = Concord.entity(world)
-            local position   = originalBlock.position
-            local yOffset = -4 -- add to avoid collison during brick bumps
-
-            oneup:give('position', {x = position.position.x, y = position.position.y + yOffset}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
-            local oneupID = self:getReferenceBlockIDAsEntity(entityID, 52)
-            oneup:give('texture', BLOCK_TILESHEET_IMG)
-            oneup:give('spritesheet', oneup.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE, 1, 1, 1, ORIGINAL_CUBE_SIZE,
-                                           ORIGINAL_CUBE_SIZE, MapInstance:getBlockCoord(oneupID))
-            
-            oneup:give('collectible', COLLECTIBLE_TYPE.ONE_UP)
-
-
-            oneup:give('moving_component', {x = 0, y = -1}, {x = 0, y = 0})
-            oneup:give('collision_exempt_component')
-            oneup:give('wait_until_component', 
-                function(entity)
-                    return position:getTop() > entity.position:getBottom()
-                end,
-                function(entity)
-                    entity:give('gravity_component')
-                    entity.moving_component.velocity.x = COLLECTIBLE_SPEED
-                    entity:remove('collision_exempt_component')
-                    entity:remove('wait_until_component')
-                end)
-        end
+        mysteryBox.whenDispensed = self:dispenseOneUp(entityID)
     elseif mysteryBox.type == MYSTERY_BOX_TYPE.VINES then
         local blockPositionX = entity.position.position.x / SCALED_CUBE_SIZE
         local blockPositionY = entity.position.position.y / SCALED_CUBE_SIZE
@@ -803,6 +648,182 @@ function MapSystem:addItemDispenser(entity, entityID, referenceID)
                 end
             end)
         end
+    end
+end
+
+function MapSystem:dispenseMushroomOrFlower(entityID)
+    return function(originalBlock) 
+        local dispenseSound = Concord.entity(self.world)
+        dispenseSound:give('sound_component', SOUND_ID.POWER_UP_APPEAR)
+
+        local player = self.world:getSystem(PlayerSystem):getMario().player
+
+        if player.playerState == PLAYER_STATE.SMALL_MARIO then 
+            self:dispenseMushroom(originalBlock, entityID)
+        else
+            self:dispenseFlower(originalBlock, entityID)
+        end
+    end
+end
+
+function MapSystem:dispenseMushroom(originalBlock, entityID)
+    local mushroom = Concord.entity(self.world)
+    local position   = originalBlock.position
+    mushroom:give('position', {x = position.position.x, y = position.position.y}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
+    local flowerID = self:getReferenceBlockIDAsEntity(entityID, 48)
+    mushroom:give('texture', BLOCK_TILESHEET_IMG)
+    mushroom:give('spritesheet', mushroom.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE, 1, 1, 1, ORIGINAL_CUBE_SIZE,
+                                   ORIGINAL_CUBE_SIZE, MapInstance:getBlockCoord(608))
+    
+    mushroom:give('collectible', COLLECTIBLE_TYPE.MUSHROOM)
+    mushroom:give('moving_component', {x = 0, y = -1}, {x = 0, y = 0})
+    mushroom:give('collision_exempt_component')
+    mushroom:give('wait_until_component', 
+        function(entity)
+            return position:getTop() > entity.position:getBottom()
+        end,
+        function(entity)
+            entity:give('gravity_component')
+            entity.moving_component.velocity.x = COLLECTIBLE_SPEED
+            entity:remove('collision_exempt_component')
+            entity:remove('wait_until_component')
+        end)
+end
+
+function MapSystem:dispenseFlower(originalBlock, entityID)
+    local fireFlower = Concord.entity(self.world)
+    local position   = originalBlock.position
+    fireFlower:give('position', {x = position.position.x, y = position.position.y}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
+    local flowerID = self:getReferenceBlockIDAsEntity(entityID, 48)
+    fireFlower:give('texture', BLOCK_TILESHEET_IMG)
+    fireFlower:give('spritesheet', fireFlower.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE, 1, 1, 1, ORIGINAL_CUBE_SIZE,
+                                   ORIGINAL_CUBE_SIZE, MapInstance:getBlockCoord(flowerID))
+
+    fireFlower:give('animation_component', 
+                    {flowerID, flowerID + 1, flowerID + 2, flowerID + 3}, --frameIDs
+                     8,                                   --framesPerSecond
+                     MapInstance.BlockIDCoordinates)      --coordinateSupplier
+    
+    fireFlower:give('collectible', COLLECTIBLE_TYPE.FIRE_FLOWER)
+    fireFlower:give('moving_component', {x = 0, y = -1}, {x = 0, y = 0})
+    fireFlower:give('collision_exempt_component')
+    fireFlower:give('wait_until_component', 
+        function(entity)
+            return position:getTop() > entity.position:getBottom()
+        end,
+        function(entity)
+            entity:give('gravity_component')
+            entity.moving_component.velocity.y = 0
+            entity:remove('collision_exempt_component')
+            entity:remove('wait_until_component')
+        end)
+end
+
+function MapSystem:dispenseCoin(entityID)
+    return function(originalBlock)
+        local coinSound = Concord.entity(self.world)
+        coinSound:give('sound_component', SOUND_ID.COIN)
+        local addScore = Concord.entity(world)
+        addScore:give('add_score_component', 100, true)
+
+        local floatingText = Concord.entity(self.world)
+        floatingText:give('create_floating_text_component', originalBlock, tostring(100))
+
+        local coin = Concord.entity(self.world)
+        local position = originalBlock.position
+        coin:give('position', {x = position.position.x, y = position.position.y}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
+        coin:give('texture', BLOCK_TILESHEET_IMG)
+        coin:give('spritesheet', coin.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE, 1, 1,
+                                            1, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE,
+                                            MapInstance:getBlockCoord(656))
+        
+        coin:give('foreground')
+
+        coin:give('animation_component', 
+        {656, 657, 658, 659},                 --frameIDs
+         8,                                   --framesPerSecond
+         MapInstance.BlockIDCoordinates)      --coordinateSupplier
+
+        coin:give('gravity_component')
+        coin:give('moving_component', {x = 0, y = -10}, {x = 0, y = 0.3})
+        coin:give('particle')
+
+        coin:give('wait_until_component', 
+        function(entity)
+            return AABBCollision(position, entity.position) and entity.moving_component.velocity.y >= 0
+        end,
+        function(entity)
+            self.world:removeEntity(entity)
+        end
+        )
+    end
+end
+
+function MapSystem:dispenseSuperStar(entityID)
+    return function(originalBlock)
+        local dispenseSound = Concord.entity(self.world)
+        dispenseSound:give('sound_component', SOUND_ID.POWER_UP_APPEAR)
+
+        local star = Concord.entity(self.world)
+        local position   = originalBlock.position
+
+        star:give('position', {x = position.position.x, y = position.position.y}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
+        local starID = self:getReferenceBlockIDAsEntity(entityID, 96)
+        star:give('texture', BLOCK_TILESHEET_IMG)
+        star:give('spritesheet', star.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE, 1, 1, 1, ORIGINAL_CUBE_SIZE,
+                                       ORIGINAL_CUBE_SIZE, MapInstance:getBlockCoord(starID))
+        
+        star:give('collectible', COLLECTIBLE_TYPE.SUPER_STAR)
+        star:give('animation_component', 
+        {starID, starID + 1, starID + 2, starID + 3},   --frameIDs
+         8,                                             --framesPerSecond
+         MapInstance.BlockIDCoordinates)                --coordinateSupplier
+
+
+        star:give('moving_component', {x = 0, y = -1}, {x = 0, y = 0})
+        star:give('collision_exempt_component')
+        star:give('wait_until_component', 
+            function(entity)
+                return position:getTop() > entity.position:getBottom()
+            end,
+            function(entity)
+                entity:give('gravity_component')
+                entity.moving_component.velocity.x = COLLECTIBLE_SPEED
+                entity:remove('collision_exempt_component')
+                entity:remove('wait_until_component')
+            end)
+    end
+end
+
+function MapSystem:dispenseOneUp(entityID)
+    return function(originalBlock)
+        local dispenseSound = Concord.entity(self.world)
+        dispenseSound:give('sound_component', SOUND_ID.POWER_UP_APPEAR)
+        local oneup = Concord.entity(self.world)
+        local position   = originalBlock.position
+        local yOffset = -4 -- add to avoid collison during brick bumps
+
+        oneup:give('position', {x = position.position.x, y = position.position.y + yOffset}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
+        local oneupID = self:getReferenceBlockIDAsEntity(entityID, 52)
+        oneup:give('texture', BLOCK_TILESHEET_IMG)
+        oneup:give('spritesheet', oneup.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE, 1, 1, 1, ORIGINAL_CUBE_SIZE,
+                                       ORIGINAL_CUBE_SIZE, MapInstance:getBlockCoord(oneupID))
+        
+        oneup:give('collectible', COLLECTIBLE_TYPE.ONE_UP)
+
+
+        oneup:give('moving_component', {x = 0, y = -1}, {x = 0, y = 0})
+        oneup:give('collision_exempt_component')
+        oneup:give('wait_until_component', 
+            function(entity)
+                return position:getTop() > entity.position:getBottom()
+            end,
+            function(entity)
+                entity:give('gravity_component')
+                entity.moving_component.velocity.x = COLLECTIBLE_SPEED
+                entity:remove('collision_exempt_component')
+                entity:remove('wait_until_component')
+            end)
     end
 end
 
