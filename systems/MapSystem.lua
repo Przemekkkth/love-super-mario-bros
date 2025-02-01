@@ -921,7 +921,7 @@ function MapSystem:createEnemyEntity(coordinateX, coordinateY, entityID, referen
     MapSystem.RED_CHEEP_CHEEP_CODE = 498
     MapSystem.LAVA_BUBBLE_CODE = 504
 
-    if referenceID == MapSystem.KOOPA_CODE then 
+    if referenceID == MapSystem.KOOPA_CODE or referenceID == MapSystem.RED_KOOPA_CODE then 
         self:createKoopa(coordinateX, coordinateY, entityID)
     elseif referenceID == MapSystem.SHIFTED_KOOPA_CODE then 
         self:createShiftedKoopa(coordinateX, coordinateY, entityID)
@@ -945,8 +945,6 @@ function MapSystem:createEnemyEntity(coordinateX, coordinateY, entityID, referen
         self:createCheepCheep(coordinateX, coordinateY, entityID)
     elseif referenceID == MapSystem.BUZZY_BEETLE_CODE then 
         self:createBuzzyBeetle(coordinateX, coordinateY, entityID)
-    elseif referenceID == MapSystem.RED_KOOPA_CODE then 
-        self:createRedKoopa(coordinateX, coordinateY, entityID)
     elseif referenceID == MapSystem.RED_CHEEP_CHEEP_CODE then
         self:createRedCheepCheep(coordinateX, coordinateY, entityID)
     elseif referenceID == MapSystem.LAVA_BUBBLE_CODE then
@@ -988,6 +986,7 @@ function MapSystem:createKoopa(x, y, entityID)
     end)
 
     entity:give('enemy', ENEMY_TYPE.KOOPA)
+    return entity
 end
 
 function MapSystem:createShiftedKoopa(x, y, entityID)
@@ -1523,6 +1522,7 @@ function MapSystem:createGoomba(x, y, entityID)
 
     entity:give('gravity_component')
     entity:give('enemy', ENEMY_TYPE.GOOMBA)
+    return entity
 end
 
 function MapSystem:createShiftedGoomba(x, y, entityID)
@@ -1591,42 +1591,6 @@ function MapSystem:createBuzzyBeetle(x, y, entityID)
     end)
 
     entity:give('enemy', ENEMY_TYPE.BUZZY_BEETLE)
-end
-
-function MapSystem:createRedKoopa(x, y, entityID)
-    local entity = Concord.entity(self.world)
-    entity:give('position', {x = (x - 1) * SCALED_CUBE_SIZE, y = (y - 1) * SCALED_CUBE_SIZE},
-                            {x = SCALED_CUBE_SIZE, y = 2 * SCALED_CUBE_SIZE},
-                            {x = 0, y = SCALED_CUBE_SIZE, w = SCALED_CUBE_SIZE, h = SCALED_CUBE_SIZE})
-    entity:give('texture', ENEMY_TILESHEET_IMG)
-    entity:give('spritesheet', entity.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE * 2, 1, 1, 0, ORIGINAL_CUBE_SIZE,
-        ORIGINAL_CUBE_SIZE, MapInstance:getEnemyCoord(entityID) )
-    
-    local firstAnimationID = entityID
-    entity:give('animation_component', 
-                {firstAnimationID, firstAnimationID + 1}, --frameIDs
-                6,                                   --framesPerSecond
-                MapInstance.EnemyIDCoordinates)      --coordinateSupplier
-
-    entity:give('moving_component', {x = -ENEMY_SPEED, y = 0}, {x = 0, y = 0})
-    entity:give('gravity_component')
-    entity:give('crushable_component', 
-    function(entity)
-        entity:remove('animation_component')
-        entity.enemy.type = ENEMY_TYPE.KOOPA_SHELL
-        entity.moving_component.velocity.x = 0
-        entity.spritesheet:setEntityHeight(ORIGINAL_CUBE_SIZE)
-
-        entity:give('destroy_outside_camera_component')
-        local position = entity.position
-        position.scale.y = SCALED_CUBE_SIZE
-        position.hitbox = {x = 0, y = 0, w = SCALED_CUBE_SIZE, h = SCALED_CUBE_SIZE}
-        position.position.y = position.position.y + SCALED_CUBE_SIZE
-
-        entity.spritesheet:setSpritesheetCoordinates(MapInstance:getEnemyCoord(entityID + 39))
-    end)
-
-    entity:give('enemy', ENEMY_TYPE.KOOPA)
 end
 
 function MapSystem:createRedCheepCheep(x, y, entityID)
