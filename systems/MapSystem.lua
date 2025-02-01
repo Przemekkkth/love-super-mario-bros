@@ -1,13 +1,6 @@
 MapSystem = Concord.system()
 
 MapSystem.INVALID_CODE = -1
-MapSystem.FLAG_POLE1 = 101
-MapSystem.COIN_CODE1 = 144
-MapSystem.FLAG_POLE2 = 149 
-MapSystem.COIN_CODE2 = 176
-MapSystem.FLAG_CODE = 152
-MapSystem.AXE_CODE = 240
-
 
 function MapSystem:init(world)
     self.world = world
@@ -20,7 +13,7 @@ end
 function MapSystem:loadEntities()
     self:createBackgroundEntities()
     self:createUndergroundEntities()
-    self:addPlatformsLevel()
+    self:createPlatformLevelEntities()
     self:createForegroundEntities()
     self:createFireBarEntities()
     self:createEnemyEntities()
@@ -103,13 +96,16 @@ end
 
 function MapSystem:createAboveForegroundEntities()
     local aboveForegroundMap = self.scene:getAboveForegroundMap()
-    for i = 1, #aboveForegroundMap:getLevelData() do
-        for j = 1, #aboveForegroundMap:getLevelData()[1] do
-            local entityID = aboveForegroundMap:getLevelData()[i][j]
+    local mapHeight = #aboveForegroundMap:getLevelData()
+    local mapWidth  = #aboveForegroundMap:getLevelData()[1] 
+
+    for y = 1, mapHeight do
+        for x = 1, mapWidth do
+            local entityID = aboveForegroundMap:getLevelData()[y][x]
             local referenceID = self:getReferenceBlockID(entityID)
             if referenceID == 150 or referenceID == 292 then -- WARP Pipe
                 local entity = Concord.entity(self.world)
-                entity:give('position', {x = (j-1) * SCALED_CUBE_SIZE, y = (i - 1) * SCALED_CUBE_SIZE}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
+                entity:give('position', {x = (x - 1) * SCALED_CUBE_SIZE, y = (y - 1) * SCALED_CUBE_SIZE}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
                 entity:give('texture', BLOCK_TILESHEET_IMG, false, false)
                 entity:give('spritesheet', entity.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE, 1, 1, 1, ORIGINAL_CUBE_SIZE,
                     ORIGINAL_CUBE_SIZE, MapInstance:getBlockCoord(entityID))
@@ -117,7 +113,7 @@ function MapSystem:createAboveForegroundEntities()
                 --[ {"pipe_coords": [57, 9], "teleport_coords": [2, 20], "camera_coords": [0, 18], "going_in": "DOWN", "going_out": "NONE", "freeze_camera": true, "bg_color": "BLACK", "level_type": "UNDERGROUND", "level_to_go": [0, 0]} ]
                 local position = entity.position
                 for key, warpPipeLocation in ipairs(warpPipeLocations) do
-                    if (j - 1) == warpPipeLocation.pipe_coords[1] and (i - 1) == warpPipeLocation.pipe_coords[2] then
+                    if (x - 1) == warpPipeLocation.pipe_coords[1] and (y - 1) == warpPipeLocation.pipe_coords[2] then
                         if warpPipeLocation.going_in ~= "NONE" then
                             local playerCoordinates = {x = warpPipeLocation.teleport_coords[1], y = warpPipeLocation.teleport_coords[2] }
                             local cameraCoordinates = {x = warpPipeLocation.camera_coords[1], y = warpPipeLocation.camera_coords[2] }
@@ -150,17 +146,21 @@ function MapSystem:createAboveForegroundEntities()
                 end
 
                 entity:give('above_foreground')
-            elseif referenceID ~= -1 then
-                local entity = Concord.entity(self.world)
-                entity:give('position', {x = (j-1) * SCALED_CUBE_SIZE, y = (i-1) * SCALED_CUBE_SIZE}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
-                entity:give('texture', BLOCK_TILESHEET_IMG, false, false)
-                entity:give('spritesheet', entity.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE, 1, 1, 1, ORIGINAL_CUBE_SIZE,
-                    ORIGINAL_CUBE_SIZE, MapInstance:getBlockCoord(entityID))
-                entity:give('above_foreground')
+            elseif referenceID ~= MapSystem.INVALID_CODE then
+                self:createAboveForegroundEntity(x, y, entityID)
             end
 
         end
     end
+end
+
+function MapSystem:createAboveForegroundEntity(x, y, entityID)
+    local entity = Concord.entity(self.world)
+    entity:give('position', {x = (x - 1) * SCALED_CUBE_SIZE, y = (y - 1) * SCALED_CUBE_SIZE}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
+    entity:give('texture', BLOCK_TILESHEET_IMG, false, false)
+    entity:give('spritesheet', entity.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE, 1, 1, 1, ORIGINAL_CUBE_SIZE,
+        ORIGINAL_CUBE_SIZE, MapInstance:getBlockCoord(entityID))
+    entity:give('above_foreground')
 end
 
 function MapSystem:createFloatingTextEntities()
@@ -209,94 +209,34 @@ function MapSystem:getReferenceBlockID(entityID)
 end
 
 function MapSystem:createForegroundEntity(coordinateX, coordinateY, entityID, referenceID)
+    MapSystem.BULLET_BILL_CANNON_CODE = 63
+    MapSystem.FLAG_POLE_CODE1 = 101
+    MapSystem.COIN_CODE1 = 144
+    MapSystem.FLAG_POLE_CODE2 = 149 
+    MapSystem.FLAG_CODE = 152
+    MapSystem.COIN_CODE2 = 176
+    MapSystem.QUESTION_BLOCK_CODE = 192
+    MapSystem.AXE_CODE = 240
+    MapSystem.BRICK_CODE1 = 289
+    MapSystem.BRICK_CODE2 = 290
+    MapSystem.TRAMPOLINE_CODE = 346
+    
     local world = self:getWorld()
     local collectiblesMap = self.scene:getCollectiblesMap()
 
-    if referenceID == MapSystem.COIN_CODE1 or referenceID == MapSystem.COIN_CODE2 then -- COIN
+    if referenceID == MapSystem.COIN_CODE1 or referenceID == MapSystem.COIN_CODE2 then 
         self:createCoin(coordinateX, coordinateY, entityID)
-    elseif referenceID == 63 then -- BULLET BILL CANNON
-        local entity = self:createBlockEntity(coordinateX, coordinateY, entityID)
-        local bulletBillID
-        if entityID == 63 then -- Overworld
-            bulletBillID = 90
-        elseif entityID == 79 then -- Underground
-            bulletBillID = 195
-        elseif entityID == 95 then -- Underwater
-            bulletBillID = 300
-        elseif entityID == 591 then -- Castle
-            bulletBillID = 405
-        else
-            bulletBillID = 90
-        end
-           
-        entity:give('timer_component', function(entity) 
-            if not CameraInstance:inCameraRange(entity.position) then
-                return
-            end
-
-            local bulletBill = Concord.entity(world)
-            local randomDirection = math.random(0, 1) == 1
-            local intRandomDirection= randomDirection and 1 or 0  
-            bulletBill:give('position', {x = ((coordinateX - 1) + (intRandomDirection * 2 - 1)) * SCALED_CUBE_SIZE,
-                                         y = (coordinateY - 1) * SCALED_CUBE_SIZE}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
-            bulletBill:give('texture', ENEMY_TILESHEET_IMG, randomDirection, false)
-            bulletBill.texture:setHorizontalFlipped(randomDirection)
-            bulletBill:give('spritesheet', bulletBill.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE, 1, 1, 0, ORIGINAL_CUBE_SIZE,
-                                                               ORIGINAL_CUBE_SIZE, MapInstance:getBlockCoord(bulletBillID + 26) )
-            local xVelocity = randomDirection and 3.0 or -3.0
-            bulletBill:give('moving_component', {x = xVelocity, y = 0}, {x = 0, y = 0})
-            bulletBill:give('destroy_outside_camera_component')
-            bulletBill:give('friction_exempt_component')
-            bulletBill:give('particle')
-            
-            local cannonSound = Concord.entity(world)
-            cannonSound:give('sound_component', SOUND_ID.CANNON_FIRE)
-
-            bulletBill:give('crushable_component', function(entity)
-                entity.moving_component.velocity.x = 0
-                entity:give('dead_component')
-                entity:give('gravity_component')
-            end)
-
-            bulletBill:give('enemy', ENEMY_TYPE.BULLET_BILL)
-        end, 4 * MAX_FPS)
-    elseif referenceID == MapSystem.FLAG_POLE1 or referenceID == MapSystem.FLAG_POLE2 then -- FLAG POLE
+    elseif referenceID == MapSystem.BULLET_BILL_CANNON_CODE then 
+        self:createBulletBillCannon(coordinateX, coordinateY, entityID)
+    elseif referenceID == MapSystem.FLAG_POLE_CODE1 or referenceID == MapSystem.FLAG_POLE_CODE2 then -- FLAG POLE
         self:createFlagPole(coordinateX, coordinateY, entityID)
     elseif referenceID == MapSystem.FLAG_CODE then -- FLAG
         self:createFlag(coordinateX, coordinateY, entityID)
-    elseif referenceID == 192 then -- QUESTION BLOCK   
-        local entity = self:createBlockEntity(coordinateX, coordinateY, entityID)
-        entity:give('animation_component', 
-            {entityID, entityID + 1, entityID + 2, entityID + 3}, --frameIDs
-             8,                                   --framesPerSecond
-            MapInstance.BlockIDCoordinates)      --coordinateSupplier
-        
-        entity:give('pause_animation_component', 1, 25)
-        entity:give('bumpable_component')
-
-        
-        local collectibleType = MYSTERY_BOX_TYPE.COINS
-        local collectibleID = collectiblesMap:getLevelData()[coordinateY][coordinateX]
-        if collectibleID ~= -1 then
-            local referenceCollectibleID = self:getReferenceBlockID(collectibleID)
-            if referenceCollectibleID == 52 then
-                collectibleType = MYSTERY_BOX_TYPE.ONE_UP
-            elseif referenceCollectibleID == 96 then
-                collectibleType = MYSTERY_BOX_TYPE.SUPER_STAR
-            elseif referenceCollectibleID == 144 then
-                collectibleType = MYSTERY_BOX_TYPE.COINS
-            elseif referenceCollectibleID == 608 then
-                collectibleType = MYSTERY_BOX_TYPE.MUSHROOM     
-            end
-        end
-
-        if collectibleType ~= MYSTERY_BOX_TYPE.NONE then
-            entity:give('mystery_box_component', collectibleType)
-            self:addItemDispenser(entity, entityID)
-        end
+    elseif referenceID == MapSystem.QUESTION_BLOCK_CODE then -- QUESTION BLOCK   
+        self:createQuestionBlock(coordinateX, coordinateY, entityID)
     elseif referenceID == MapSystem.AXE_CODE then -- AXE  
         self:createAxe(coordinateX, coordinateY, entityID)
-    elseif referenceID == 289 or referenceID == 290 then -- BRICKS
+    elseif referenceID == MapSystem.BRICK_CODE1 or referenceID == MapSystem.BRICK_CODE2 then -- BRICKS
         local entity = self:createBlockEntity(coordinateX, coordinateY, entityID)
         local debrisID = self:getReferenceBlockIDAsEntity(entityID, 291)
         entity:give('destructible_component', MapInstance:getBlockCoord(debrisID))
@@ -323,17 +263,15 @@ function MapSystem:createForegroundEntity(coordinateX, coordinateY, entityID, re
             self:addItemDispenser(entity, entityID)
         end
     elseif referenceID == 339 then -- BRIDGE CHAIN (this is here so it gets destroyed with the bridge
-        if self.scene:getLevelData():getLevelType() == LEVEL_TYPE.CASTLE then
+        local isCastleLevelType = (self.scene:getLevelData():getLevelType() == LEVEL_TYPE.CASTLE)
+        if isCastleLevelType then
             local bridgeChain = self:createBlockEntity(coordinateX, coordinateY, entityID)
             bridgeChain:give('bridge_chain')
         else
             self:createBlockEntity(coordinateX, coordinateY, entityID)
         end
-    elseif referenceID == 346 then -- TRAMPOLINE
-        local trampolineTop = self:createBlockEntity(coordinateX, coordinateY, entityID)
-        local trampolineBottom = self:createBlockEntity(coordinateX, coordinateY + 1, entityID + 48)
-        trampolineBottom:remove('tile_component')
-        trampolineTop:give('trampoline_component', trampolineBottom, {entityID, entityID + 1, entityID + 2}, {entityID + 48, entityID + 1 + 48, entityID + 2 + 48})
+    elseif referenceID == MapSystem.TRAMPOLINE_CODE then -- TRAMPOLINE
+        self:createTrampoline(coordinateX, coordinateY, entityID)
     elseif referenceID == 392 then -- BRIDGE
         if self.scene:getLevelData():getLevelType() == LEVEL_TYPE.CASTLE then
             if self:getReferenceBlockID(self.scene:getForegroundMap():getLevelData()[coordinateY][coordinateX - 1]) ~= 392 then
@@ -415,7 +353,7 @@ function MapSystem:createForegroundEntity(coordinateX, coordinateY, entityID, re
         entity:give('tile_component')
     elseif referenceID == 858 or referenceID == 859 then
         -- To Do investigate(cloud platform)
-    elseif referenceID ~= -1 then
+    elseif referenceID ~= MapSystem.INVALID_CODE then
         self:createBlockEntity(coordinateX, coordinateY, entityID)
     end
 end
@@ -434,6 +372,54 @@ function MapSystem:createCoin(x, y, entityID)
                 MapInstance.BlockIDCoordinates)      --coordinateSupplier
     entity:give('pause_animation_component', 1, 25)
     entity:give('collectible', COLLECTIBLE_TYPE.COIN)
+end
+
+function MapSystem:createBulletBillCannon(x, y, entityID)
+    local entity = self:createBlockEntity(x, y, entityID)
+    local bulletBillID
+    if entityID == 63 then -- Overworld
+        bulletBillID = 90
+    elseif entityID == 79 then -- Underground
+        bulletBillID = 195
+    elseif entityID == 95 then -- Underwater
+        bulletBillID = 300
+    elseif entityID == 591 then -- Castle
+        bulletBillID = 405
+    else
+        bulletBillID = 90
+    end
+       
+    entity:give('timer_component', function(entity) 
+        if not CameraInstance:inCameraRange(entity.position) then
+            return
+        end
+
+        local bulletBill = Concord.entity(self.world)
+        local randomDirection = math.random(0, 1) == 1
+        local intRandomDirection= randomDirection and 1 or 0  
+        bulletBill:give('position', {x = ((x - 1) + (intRandomDirection * 2 - 1)) * SCALED_CUBE_SIZE,
+                                     y = (y - 1) * SCALED_CUBE_SIZE}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
+        bulletBill:give('texture', ENEMY_TILESHEET_IMG, randomDirection, false)
+        bulletBill.texture:setHorizontalFlipped(randomDirection)
+        bulletBill:give('spritesheet', bulletBill.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE, 1, 1, 0, ORIGINAL_CUBE_SIZE,
+                                                           ORIGINAL_CUBE_SIZE, MapInstance:getBlockCoord(bulletBillID + 26) )
+        local xVelocity = randomDirection and 3.0 or -3.0
+        bulletBill:give('moving_component', {x = xVelocity, y = 0}, {x = 0, y = 0})
+        bulletBill:give('destroy_outside_camera_component')
+        bulletBill:give('friction_exempt_component')
+        bulletBill:give('particle')
+        
+        local cannonSound = Concord.entity(self.world)
+        cannonSound:give('sound_component', SOUND_ID.CANNON_FIRE)
+
+        bulletBill:give('crushable_component', function(entity)
+            entity.moving_component.velocity.x = 0
+            entity:give('dead_component')
+            entity:give('gravity_component')
+        end)
+
+        bulletBill:give('enemy', ENEMY_TYPE.BULLET_BILL)
+    end, 4 * MAX_FPS)
 end
 
 function MapSystem:createFlagPole(x, y, entityID)
@@ -458,6 +444,39 @@ function MapSystem:createFlag(x, y, entityID)
     entity:give('flag_component')
 end
 
+function MapSystem:createQuestionBlock(x, y, entityID)
+    local entity = self:createBlockEntity(x, y, entityID)
+    local collectiblesMap = self.scene:getCollectiblesMap()
+    entity:give('animation_component', 
+        {entityID, entityID + 1, entityID + 2, entityID + 3}, --frameIDs
+         8,                                   --framesPerSecond
+        MapInstance.BlockIDCoordinates)      --coordinateSupplier
+    
+    entity:give('pause_animation_component', 1, 25)
+    entity:give('bumpable_component')
+
+    
+    local collectibleType = MYSTERY_BOX_TYPE.COINS
+    local collectibleID = collectiblesMap:getLevelData()[y][x]
+    if collectibleID ~= -1 then
+        local referenceCollectibleID = self:getReferenceBlockID(collectibleID)
+        if referenceCollectibleID == 52 then
+            collectibleType = MYSTERY_BOX_TYPE.ONE_UP
+        elseif referenceCollectibleID == 96 then
+            collectibleType = MYSTERY_BOX_TYPE.SUPER_STAR
+        elseif referenceCollectibleID == 144 then
+            collectibleType = MYSTERY_BOX_TYPE.COINS
+        elseif referenceCollectibleID == 608 then
+            collectibleType = MYSTERY_BOX_TYPE.MUSHROOM     
+        end
+    end
+
+    if collectibleType ~= MYSTERY_BOX_TYPE.NONE then
+        entity:give('mystery_box_component', collectibleType)
+        self:addItemDispenser(entity, entityID)
+    end
+end
+
 function MapSystem:createAxe(x, y, entityID)
     local entity = Concord.entity(self.world)
     entity:give('position', {x = (x - 1) * SCALED_CUBE_SIZE, y = (y - 1) * SCALED_CUBE_SIZE}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
@@ -472,6 +491,41 @@ function MapSystem:createAxe(x, y, entityID)
     entity:give('pause_animation_component', 1, 25)
     entity:give('foreground')
     entity:give('axe_component')
+end
+
+function MapSystem:createBrick(x, y, entityID)
+    local entity = self:createBlockEntity(x, y, entityID)
+    local debrisID = self:getReferenceBlockIDAsEntity(entityID, 291)
+    entity:give('destructible_component', MapInstance:getBlockCoord(debrisID))
+    entity:give('bumpable_component')
+    local boxType = MYSTERY_BOX_TYPE.NONE
+    local collectibleID = collectiblesMap:getLevelData()[y][x]
+    if collectibleID ~= MYSTERY_BOX_TYPE.NONE then
+        local referenceCollectibleID = self:getReferenceBlockID(collectibleID)
+        if referenceCollectibleID == 52 then
+            boxType = MYSTERY_BOX_TYPE.ONE_UP
+        elseif referenceCollectibleID == 96 then
+            boxType = MYSTERY_BOX_TYPE.SUPER_STAR
+        elseif referenceCollectibleID == 144 then
+            boxType = MYSTERY_BOX_TYPE.COINS
+        elseif referenceCollectibleID == 148 then
+            boxType = MYSTERY_BOX_TYPE.VINES
+        elseif referenceCollectibleID == 608 then
+            boxType = MYSTERY_BOX_TYPE.MUSHROOM
+        end
+    end
+
+    if boxType ~= MYSTERY_BOX_TYPE.NONE then
+        entity:give('mystery_box_component', boxType)
+        self:addItemDispenser(entity, entityID)
+    end
+end
+
+function MapSystem:createTrampoline(x, y, entityID)
+    local trampolineTop = self:createBlockEntity(x, y, entityID)
+    local trampolineBottom = self:createBlockEntity(x, y + 1, entityID + 48)
+    trampolineBottom:remove('tile_component')
+    trampolineTop:give('trampoline_component', trampolineBottom, {entityID, entityID + 1, entityID + 2}, {entityID + 48, entityID + 1 + 48, entityID + 2 + 48})
 end
 
 function MapSystem:createBlockEntity(coordinateX, coordinateY, entityID)
@@ -502,14 +556,17 @@ function MapSystem:getReferenceBlockIDAsEntity(entityID, referenceID)
     local referenceCoordinateX = referenceCoordinates.x
     local referenceCoordinateY = referenceCoordinates.y
 
-    if entityCoordinateY > 10 then
-        referenceCoordinateY = referenceCoordinateY + 11
+    local mapWorldWidthInTiles = 16
+    local mapWorldHeightInTiles = 10
+
+    if entityCoordinateY > mapWorldHeightInTiles then
+        referenceCoordinateY = referenceCoordinateY + mapWorldHeightInTiles + 1
     end
 
-    if entityCoordinateX > 15 and entityCoordinateX < 32 then
-        referenceCoordinateX = referenceCoordinateX + 16
-    elseif entityCoordinateX >= 32 then
-        referenceCoordinateX = referenceCoordinateX - 32 
+    if entityCoordinateX > mapWorldWidthInTiles - 1  and entityCoordinateX < 2*mapWorldWidthInTiles then
+        referenceCoordinateX = referenceCoordinateX + mapWorldWidthInTiles
+    elseif entityCoordinateX >= 2*mapWorldWidthInTiles then
+        referenceCoordinateX = referenceCoordinateX - 2*mapWorldWidthInTiles 
     end
 
     for key, blockIDCoord in ipairs(MapInstance:getBlockIDCoordinates()) do
@@ -1836,7 +1893,7 @@ function MapSystem:createBackgroundEntity(coordinateX, coordinateY, entityID)
     return entity
 end
 
-function MapSystem:addPlatformsLevel()
+function MapSystem:createPlatformLevelEntities()
     for _, platformLevelLocation in ipairs(self.scene:getLevelData().platformLevelLocations) do
         self:createPlatformLevelEntity(platformLevelLocation)
     end
