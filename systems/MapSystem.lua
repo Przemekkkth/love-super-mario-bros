@@ -56,35 +56,46 @@ end
 
 function MapSystem:createUndergroundEntities()
     local undergroundMap = self.scene:getUndergroundMap()
-    for i = 1, #undergroundMap:getLevelData() do
-        for j = 1, #undergroundMap:getLevelData()[1] do
-            local entityID = undergroundMap:getLevelData()[i][j]
+    local mapHeight = #undergroundMap:getLevelData()
+    local mapWidth  = #undergroundMap:getLevelData()[1]
+
+    for y = 1, mapHeight do
+        for x = 1, mapWidth do
+            local entityID = undergroundMap:getLevelData()[y][x]
             local referenceID = self:getReferenceBlockID(entityID)
-            self:createForegroundEntity(j, i, entityID, referenceID, false) -- TO DO why shouldn't be true ?
+            self:createForegroundEntity(x, y, entityID, referenceID)
         end
     end
 end
 
 function MapSystem:createForegroundEntities()
     local foregroundMap = self.scene:getForegroundMap()
-    for i = 1, #foregroundMap:getLevelData() do
-        for j = 1, #foregroundMap:getLevelData()[1] do
-            local entityID = foregroundMap:getLevelData()[i][j]
+    local mapHeight = #foregroundMap:getLevelData()
+    local mapWidth = #foregroundMap:getLevelData()[1] 
+
+    for y = 1, mapHeight do
+        for x = 1, mapWidth do
+            local entityID = foregroundMap:getLevelData()[y][x]
             local referenceID = self:getReferenceBlockID(entityID)
-            self:createForegroundEntity(j, i, entityID, referenceID, true)
+            self:createInvisibleBlock(x, y, referenceID)
+            self:createForegroundEntity(x, y, entityID, referenceID)
         end
     end
 end
 
 function MapSystem:createEnemyEntities()
     local enemyMap = self.scene:getEnemiesMap()
-    for i = 1, #enemyMap:getLevelData() do
-        for j = 1, #enemyMap:getLevelData()[1] do
-            local entityID = enemyMap:getLevelData()[i][j]
+    local mapHeight = #enemyMap:getLevelData()
+    local mapWidth  = #enemyMap:getLevelData()[1] 
+
+    for y = 1, mapHeight do
+        for x = 1, mapWidth do
+            local entityID = enemyMap:getLevelData()[y][x]
             local referenceID = self:getReferenceEnemyID(entityID)
-            if entityID ~= -1 or entityID ~= 73 or entityID ~= 83 or entityID ~= 85 or entityID ~= 85 or entityID ~= 91 or
+            -- 83?
+            if entityID ~= -1 or entityID ~= 73 or entityID ~= 83 or entityID ~= 85 or entityID ~= 91 or
                 entityID ~= 490 or entityID ~= 492 or entityID ~= 496 then
-                    self:createEnemyEntity(j, i, entityID, referenceID)
+                    self:createEnemyEntity(x, y, entityID, referenceID)
             end
         end
     end
@@ -197,49 +208,11 @@ function MapSystem:getReferenceBlockID(entityID)
     return MapSystem.INVALID_CODE
 end
 
-function MapSystem:createForegroundEntity(coordinateX, coordinateY, entityID, referenceID, createInvisibleBlocks)
+function MapSystem:createForegroundEntity(coordinateX, coordinateY, entityID, referenceID)
     local world = self:getWorld()
     local collectiblesMap = self.scene:getCollectiblesMap()
-    if referenceID == -1 then
-        if createInvisibleBlocks and collectiblesMap:getLevelData()[coordinateY][coordinateX] ~= -1 then
-            local entity = self:createBlockEntity(coordinateX, coordinateY, 53)
-            entity:give('invisible_block_component')
-            entity:give('bumpable_component')
 
-            local collectibleType = MYSTERY_BOX_TYPE.NONE
-            local collectibleID = collectiblesMap:getLevelData()[coordinateY][coordinateX]
-            local referenceCollectibleID = self:getReferenceBlockID(collectibleID)
-            local blankBlockID
-
-            if collectibleID ~= 608 then
-                blankBlockID = self:getReferenceBlockIDAsEntity(collectibleID, 53)
-            else
-                local levelType = self.scene:getLevelData().levelType
-                if levelType == LEVEL_TYPE.UNDERGROUND or levelType == LEVEL_TYPE.START_UNDERGROUND then
-                    blankBlockID = 69
-                elseif levelType == LEVEL_TYPE.CASTLE then
-                    blankBlockID = 581
-                else
-                    blankBlockID = 53
-                end
-            end
-
-            if referenceCollectibleID == 52 then
-                collectibleType = MYSTERY_BOX_TYPE.ONE_UP
-            elseif referenceCollectibleID == 96 then
-                collectibleType = MYSTERY_BOX_TYPE.SUPER_STAR
-            elseif referenceCollectibleID == 144 then
-                collectibleType = MYSTERY_BOX_TYPE.COINS
-            elseif referenceCollectibleID == 608 then
-                collectibleType = MYSTERY_BOX_TYPE.MUSHROOM
-            end
-
-            if collectibleType ~= MYSTERY_BOX_TYPE.NONE then
-                entity:give('mystery_box_component', collectibleType)
-                self:addItemDispenser(entity, blankBlockID);
-            end
-        end
-    elseif referenceID == MapSystem.COIN_CODE1 or referenceID == MapSystem.COIN_CODE2 then -- COIN
+    if referenceID == MapSystem.COIN_CODE1 or referenceID == MapSystem.COIN_CODE2 then -- COIN
         self:createCoin(coordinateX, coordinateY, entityID)
     elseif referenceID == 63 then -- BULLET BILL CANNON
         local entity = self:createBlockEntity(coordinateX, coordinateY, entityID)
@@ -442,7 +415,7 @@ function MapSystem:createForegroundEntity(coordinateX, coordinateY, entityID, re
         entity:give('tile_component')
     elseif referenceID == 858 or referenceID == 859 then
         -- To Do investigate(cloud platform)
-    else
+    elseif referenceID ~= -1 then
         self:createBlockEntity(coordinateX, coordinateY, entityID)
     end
 end
@@ -827,6 +800,49 @@ function MapSystem:dispenseOneUp(entityID)
     end
 end
 
+function MapSystem:createInvisibleBlock(coordinateX, coordinateY, referenceID)
+    local collectiblesMap = self.scene:getCollectiblesMap() 
+    local collectibleID = collectiblesMap:getLevelData()[coordinateY][coordinateX]
+    if referenceID == -1 and collectibleID ~= -1 then
+        local entity = self:createBlockEntity(coordinateX, coordinateY, 53)
+        entity:give('invisible_block_component')
+        entity:give('bumpable_component')
+
+        local collectibleType = MYSTERY_BOX_TYPE.NONE
+        
+        local referenceCollectibleID = self:getReferenceBlockID(collectibleID)
+        local blankBlockID
+
+        if collectibleID ~= 608 then
+            blankBlockID = self:getReferenceBlockIDAsEntity(collectibleID, 53)
+        else
+            local levelType = self.scene:getLevelData().levelType
+            if levelType == LEVEL_TYPE.UNDERGROUND or levelType == LEVEL_TYPE.START_UNDERGROUND then
+                blankBlockID = 69
+            elseif levelType == LEVEL_TYPE.CASTLE then
+                blankBlockID = 581
+            else
+                blankBlockID = 53
+            end
+        end
+
+        if referenceCollectibleID == 52 then
+            collectibleType = MYSTERY_BOX_TYPE.ONE_UP
+        elseif referenceCollectibleID == 96 then
+            collectibleType = MYSTERY_BOX_TYPE.SUPER_STAR
+        elseif referenceCollectibleID == 144 then
+            collectibleType = MYSTERY_BOX_TYPE.COINS
+        elseif referenceCollectibleID == 608 then
+            collectibleType = MYSTERY_BOX_TYPE.MUSHROOM
+        end
+
+        if collectibleType ~= MYSTERY_BOX_TYPE.NONE then
+            entity:give('mystery_box_component', collectibleType)
+            self:addItemDispenser(entity, blankBlockID);
+        end
+    end
+end
+
 function MapSystem:createFireBarEntities()
     local world = self:getWorld()
     for _, fireBarCoordinate in ipairs(self.scene:getLevelData().fireBarLocations) do
@@ -889,224 +905,282 @@ function MapSystem:getReferenceEnemyID(entityID)
 end
 
 function MapSystem:createEnemyEntity(coordinateX, coordinateY, entityID, referenceID)
-    local world = self:getWorld()
-    if referenceID == 38 then -- KOOPA
-        local entity = Concord.entity(world)
-        entity:give('position', {x = (coordinateX-1) * SCALED_CUBE_SIZE, y = (coordinateY-1) * SCALED_CUBE_SIZE},
-                                {x = SCALED_CUBE_SIZE, y = 2 * SCALED_CUBE_SIZE},
-                                {x = 0, y = SCALED_CUBE_SIZE, w = SCALED_CUBE_SIZE, h = SCALED_CUBE_SIZE})
-        entity:give('texture', ENEMY_TILESHEET_IMG)
-        entity:give('spritesheet', entity.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE * 2, 1, 1, 0, ORIGINAL_CUBE_SIZE,
-            ORIGINAL_CUBE_SIZE, MapInstance:getEnemyCoord(entityID) )
-        
-        local firstAnimationID = entityID
-        entity:give('animation_component', 
-                    {firstAnimationID, firstAnimationID + 1}, --frameIDs
-                    6,                                   --framesPerSecond
-                    MapInstance.EnemyIDCoordinates)      --coordinateSupplier
+    MapSystem.KOOPA_CODE = 38
+    MapSystem.SHIFTED_KOOPA_CODE = 39
+    MapSystem.KOOPA_PARATROOPA_CODE = 40
+    MapSystem.PIRANHA_PLANT_CODE = 44
+    MapSystem.BLOOPER_CODE = 48
+    MapSystem.LAKITU_CODE = 50
+    MapSystem.HAMMER_BRO_CODE = 56
+    MapSystem.BOWSER_CODE = 61
+    MapSystem.GOOMBA_CODE = 70
+    MapSystem.SHIFTED_GOOMBA_CODE = 71
+    MapSystem.CHEEP_CHEEP_CODE = 81
+    MapSystem.BUZZY_BEETLE_CODE = 87
+    MapSystem.RED_KOOPA_CODE = 455
+    MapSystem.RED_CHEEP_CHEEP_CODE = 498
+    MapSystem.LAVA_BUBBLE_CODE = 504
 
-        entity:give('moving_component', {x = -ENEMY_SPEED, y = 0}, {x = 0, y = 0})
-        entity:give('gravity_component')
-        entity:give('crushable_component', 
+    if referenceID == MapSystem.KOOPA_CODE then 
+        self:createKoopa(coordinateX, coordinateY, entityID)
+    elseif referenceID == MapSystem.SHIFTED_KOOPA_CODE then 
+        self:createShiftedKoopa(coordinateX, coordinateY, entityID)
+    elseif referenceID == MapSystem.KOOPA_PARATROOPA_CODE then 
+        self:createKoopaParatroopa(coordinateX, coordinateY, entityID)
+    elseif referenceID == MapSystem.PIRANHA_PLANT_CODE then 
+        self:createPirhannaPlant(coordinateX, coordinateY, entityID)
+    elseif referenceID == MapSystem.BLOOPER_CODE then 
+        self:createBlooper(coordinateX, coordinateY, entityID)
+    elseif referenceID == MapSystem.LAKITU_CODE then 
+        self:createLakitu(coordinateX, coordinateY, entityID)
+    elseif referenceID == MapSystem.HAMMER_BRO_CODE then 
+        self:createHammerBro(coordinateX, coordinateY, entityID)
+    elseif referenceID == MapSystem.BOWSER_CODE then 
+        self:createBowser(coordinateX, coordinateY, entityID)
+    elseif referenceID == MapSystem.GOOMBA_CODE then 
+        self:createGoomba(coordinateX, coordinateY, entityID)
+    elseif referenceID == MapSystem.SHIFTED_GOOMBA_CODE then 
+        self:createShiftedGoomba(coordinateX, coordinateY, entityID)
+    elseif referenceID == MapSystem.CHEEP_CHEEP_CODE then 
+        self:createCheepCheep(coordinateX, coordinateY, entityID)
+    elseif referenceID == MapSystem.BUZZY_BEETLE_CODE then 
+        self:createBuzzyBeetle(coordinateX, coordinateY, entityID)
+    elseif referenceID == MapSystem.RED_KOOPA_CODE then 
+        self:createRedKoopa(coordinateX, coordinateY, entityID)
+    elseif referenceID == MapSystem.RED_CHEEP_CHEEP_CODE then
+        self:createRedCheepCheep(coordinateX, coordinateY, entityID)
+    elseif referenceID == MapSystem.LAVA_BUBBLE_CODE then
+        self:createLavaBubble(coordinateX, coordinateY, entityID)
+    end
+end
+
+function MapSystem:createKoopa(x, y, entityID)
+    local entity = Concord.entity(self.world)
+    entity:give('position', {x = (x-1) * SCALED_CUBE_SIZE, y = (y-1) * SCALED_CUBE_SIZE},
+                            {x = SCALED_CUBE_SIZE, y = 2 * SCALED_CUBE_SIZE},
+                            {x = 0, y = SCALED_CUBE_SIZE, w = SCALED_CUBE_SIZE, h = SCALED_CUBE_SIZE})
+    entity:give('texture', ENEMY_TILESHEET_IMG)
+    entity:give('spritesheet', entity.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE * 2, 1, 1, 0, ORIGINAL_CUBE_SIZE,
+        ORIGINAL_CUBE_SIZE, MapInstance:getEnemyCoord(entityID) )
+    
+    local firstAnimationID = entityID
+    entity:give('animation_component', 
+                {firstAnimationID, firstAnimationID + 1}, --frameIDs
+                6,                                   --framesPerSecond
+                MapInstance.EnemyIDCoordinates)      --coordinateSupplier
+
+    entity:give('moving_component', {x = -ENEMY_SPEED, y = 0}, {x = 0, y = 0})
+    entity:give('gravity_component')
+    entity:give('crushable_component', 
+    function(entity)
+        entity:remove('animation_component')
+        entity.enemy.type = ENEMY_TYPE.KOOPA_SHELL
+        entity.moving_component.velocity.x = 0
+        entity.spritesheet:setEntityHeight(ORIGINAL_CUBE_SIZE)
+
+        entity:give('destroy_outside_camera_component')
+        local position = entity.position
+        position.scale.y = SCALED_CUBE_SIZE
+        position.hitbox = {x = 0, y = 0, w = SCALED_CUBE_SIZE, h = SCALED_CUBE_SIZE}
+        position.position.y = position.position.y + SCALED_CUBE_SIZE
+
+        entity.spritesheet:setSpritesheetCoordinates(MapInstance:getEnemyCoord(entityID + 39))
+    end)
+
+    entity:give('enemy', ENEMY_TYPE.KOOPA)
+end
+
+function MapSystem:createShiftedKoopa(x, y, entityID)
+    local entity = Concord.entity(self.world)
+    entity:give('position', {x = (x - 1) * SCALED_CUBE_SIZE, y = (y - 1) * SCALED_CUBE_SIZE},
+                            {x = SCALED_CUBE_SIZE, y = 2 * SCALED_CUBE_SIZE},
+                            {x = 0, y = SCALED_CUBE_SIZE, w = SCALED_CUBE_SIZE, h = SCALED_CUBE_SIZE})
+    entity:give('texture', ENEMY_TILESHEET_IMG)
+    entity:give('spritesheet', entity.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE * 2, 1, 1, 0, ORIGINAL_CUBE_SIZE,
+        ORIGINAL_CUBE_SIZE, MapInstance:getEnemyCoord(entityID) )
+    
+    local firstAnimationID = entityID - 1
+    entity:give('animation_component', 
+                {firstAnimationID + 1, firstAnimationID}, --frameIDs
+                6,                                   --framesPerSecond
+                MapInstance.EnemyIDCoordinates)      --coordinateSupplier
+
+    entity:give('moving_component', {x = -ENEMY_SPEED, y = 0}, {x = 0, y = 0})
+    entity:give('gravity_component')
+    entity:give('crushable_component', 
+    function(entity)
+        entity:remove('animation_component')
+        entity.enemy.type = ENEMY_TYPE.KOOPA_SHELL
+        entity.moving_component.velocity.x = 0
+        entity.spritesheet:setEntityHeight(ORIGINAL_CUBE_SIZE)
+
+        entity:give('destroy_outside_camera_component')
+        local position = entity.position
+        position.scale.y = SCALED_CUBE_SIZE
+        position.hitbox = {x = 0, y = 0, w = SCALED_CUBE_SIZE, h = SCALED_CUBE_SIZE}
+        position.position.y = position.position.y + SCALED_CUBE_SIZE
+
+        entity.spritesheet:setSpritesheetCoordinates(MapInstance:getEnemyCoord(entityID + 38))
+    end)
+
+    entity:give('enemy', ENEMY_TYPE.KOOPA)
+end
+
+function MapSystem:createKoopaParatroopa(x, y, entityID)
+    local koopa = Concord.entity(self.world)
+    koopa:give('position', {x = (x - 1) * SCALED_CUBE_SIZE, y = (y - 1) * SCALED_CUBE_SIZE},
+                           {x = SCALED_CUBE_SIZE, y = 2 * SCALED_CUBE_SIZE},
+                           {x = 0, y = SCALED_CUBE_SIZE, w = SCALED_CUBE_SIZE, h = SCALED_CUBE_SIZE})
+    koopa:give('texture', ENEMY_TILESHEET_IMG)
+    koopa:give('spritesheet', koopa.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE * 2, 1, 1,
+                                            0, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE,
+                                            MapInstance:getEnemyCoord(entityID))
+    koopa:give('animation_component', {entityID, entityID + 1}, 4, MapInstance:getEnemyIDCoordinates())
+    koopa:give('moving_component', {x = -ENEMY_SPEED, y = 0}, {x = 0, y = 0})
+    koopa:give('gravity_component')
+    koopa:give('friction_exempt_component')
+    koopa:give('wait_until_component',
+    function(entity)
+        return entity:has('bottom_collision_component')
+    end,
+    function(entity)
+        entity:remove('bottom_collision_component')
+        entity.moving_component.velocity.y = -8
+        entity.moving_component.acceleration.y = -0.22
+    end)
+
+    koopa:give('crushable_component',
+    function(entity)
+        entity:remove('wait_until_component')
+        entity.enemy.type = ENEMY_TYPE.KOOPA
+        entity.animation_component.frameIDs = {entityID - 2, entityID - 1}
+        entity:give('bottom_collision_component')
+        entity.crushable_component.whenCrushed = 
         function(entity)
-            entity:remove('animation_component')
             entity.enemy.type = ENEMY_TYPE.KOOPA_SHELL
-            entity.moving_component.velocity.x = 0
+            entity.moving_component.velocity.x = 0.0
             entity.spritesheet:setEntityHeight(ORIGINAL_CUBE_SIZE)
-
             entity:give('destroy_outside_camera_component')
             local position = entity.position
             position.scale.y = SCALED_CUBE_SIZE
             position.hitbox = {x = 0, y = 0, w = SCALED_CUBE_SIZE, h = SCALED_CUBE_SIZE}
             position.position.y = position.position.y + SCALED_CUBE_SIZE
-
-            entity.spritesheet:setSpritesheetCoordinates(MapInstance:getEnemyCoord(entityID + 39))
-        end)
-
-        entity:give('enemy', ENEMY_TYPE.KOOPA)
-    elseif referenceID == 39 then -- KOOPA (shifted to the right)
-        local entity = Concord.entity(world)
-        entity:give('position', {x = (coordinateX-1) * SCALED_CUBE_SIZE, y = (coordinateY-1) * SCALED_CUBE_SIZE},
-                                {x = SCALED_CUBE_SIZE, y = 2 * SCALED_CUBE_SIZE},
-                                {x = 0, y = SCALED_CUBE_SIZE, w = SCALED_CUBE_SIZE, h = SCALED_CUBE_SIZE})
-        entity:give('texture', ENEMY_TILESHEET_IMG)
-        entity:give('spritesheet', entity.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE * 2, 1, 1, 0, ORIGINAL_CUBE_SIZE,
-            ORIGINAL_CUBE_SIZE, MapInstance:getEnemyCoord(entityID) )
-        
-        local firstAnimationID = entityID - 1
-        entity:give('animation_component', 
-                    {firstAnimationID + 1, firstAnimationID}, --frameIDs
-                    6,                                   --framesPerSecond
-                    MapInstance.EnemyIDCoordinates)      --coordinateSupplier
-
-        entity:give('moving_component', {x = -ENEMY_SPEED, y = 0}, {x = 0, y = 0})
-        entity:give('gravity_component')
-        entity:give('crushable_component', 
-        function(entity)
+            local shellCoordinate = self:getReferenceBlockIDAsEntity(entityID, 77)
+            entity.spritesheet:setSpritesheetCoordinates(MapInstance:getEnemyCoord(entityID + 37))
             entity:remove('animation_component')
-            entity.enemy.type = ENEMY_TYPE.KOOPA_SHELL
-            entity.moving_component.velocity.x = 0
-            entity.spritesheet:setEntityHeight(ORIGINAL_CUBE_SIZE)
+        end
+    end)
+    koopa:give('enemy', ENEMY_TYPE.KOOPA_PARATROOPA)
+end
 
-            entity:give('destroy_outside_camera_component')
-            local position = entity.position
-            position.scale.y = SCALED_CUBE_SIZE
-            position.hitbox = {x = 0, y = 0, w = SCALED_CUBE_SIZE, h = SCALED_CUBE_SIZE}
-            position.position.y = position.position.y + SCALED_CUBE_SIZE
+function MapSystem:createPirhannaPlant(x, y, entityID)
+    local pirhanna = Concord.entity(self.world)
+    pirhanna:give('position', {x = (x - 1) * SCALED_CUBE_SIZE + SCALED_CUBE_SIZE / 2, y = (y - 1) * SCALED_CUBE_SIZE},
+                              {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE * 2},
+                              {x = 24, y = 48, w = 16, h = 16})
+    local position = pirhanna.position
+    pirhanna:give('texture', ENEMY_TILESHEET_IMG)
+    pirhanna:give('spritesheet', pirhanna.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE * 2, 1,
+                                             1, 0, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE,
+                                             MapInstance:getEnemyCoord(entityID) )
+    pirhanna:give('animation_component', {entityID, entityID + 1}, 4, MapInstance:getEnemyIDCoordinates())
+    pirhanna:give('moving_component', {x = 0, y = 0}, {x = 0, y = 0})
+    -- TO DO: I don't know why this component casues that game is lagged
+    --pirhanna:give('move_outside_camera_component')
+    pirhanna:give('collision_exempt_component')
+    pirhanna:give('friction_exempt_component')
+    pirhanna:give('enemy', ENEMY_TYPE.PIRANHA_PLANT)
+    pirhanna:give('piranha_plant_component')
+    local piranhaComponent = pirhanna.piranha_plant_component
+    piranhaComponent.pipeCoordinates = {x = position.position.x, y = position.position.y + SCALED_CUBE_SIZE * 2}
 
-            entity.spritesheet:setSpritesheetCoordinates(MapInstance:getEnemyCoord(entityID + 38))
-        end)
-
-        entity:give('enemy', ENEMY_TYPE.KOOPA)
-    elseif referenceID == 40 then -- KOOPA PARATROOPA (GREEN)
-        local koopa = Concord.entity(world)
-        koopa:give('position', {x = (coordinateX-1) * SCALED_CUBE_SIZE, y = (coordinateY-1) * SCALED_CUBE_SIZE},
-                               {x = SCALED_CUBE_SIZE, y = 2 * SCALED_CUBE_SIZE},
-                               {x = 0, y = SCALED_CUBE_SIZE, w = SCALED_CUBE_SIZE, h = SCALED_CUBE_SIZE})
-        koopa:give('texture', ENEMY_TILESHEET_IMG)
-        koopa:give('spritesheet', koopa.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE * 2, 1, 1,
-                                                0, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE,
-                                                MapInstance:getEnemyCoord(entityID))
-        koopa:give('animation_component', {entityID, entityID + 1}, 4, MapInstance:getEnemyIDCoordinates())
-        koopa:give('moving_component', {x = -ENEMY_SPEED, y = 0}, {x = 0, y = 0})
-        koopa:give('gravity_component')
-        koopa:give('friction_exempt_component')
-        koopa:give('wait_until_component',
-        function(entity)
-            return entity:has('bottom_collision_component')
-        end,
-        function(entity)
-            entity:remove('bottom_collision_component')
-            entity.moving_component.velocity.y = -8
-            entity.moving_component.acceleration.y = -0.22
-        end)
-
-        koopa:give('crushable_component',
-        function(entity)
-            entity:remove('wait_until_component')
-            entity.enemy.type = ENEMY_TYPE.KOOPA
-            entity.animation_component.frameIDs = {entityID - 2, entityID - 1}
-            entity:give('bottom_collision_component')
-            entity.crushable_component.whenCrushed = 
+    pirhanna:give('timer_component', 
+    function(entity)
+        local piranha = entity.piranha_plant_component
+        if piranha.inPipe then
+            entity.moving_component.velocity.y = -1
+            entity:give('wait_until_component',
             function(entity)
-                entity.enemy.type = ENEMY_TYPE.KOOPA_SHELL
-                entity.moving_component.velocity.x = 0.0
-                entity.spritesheet:setEntityHeight(ORIGINAL_CUBE_SIZE)
-                entity:give('destroy_outside_camera_component')
-                local position = entity.position
-                position.scale.y = SCALED_CUBE_SIZE
-                position.hitbox = {x = 0, y = 0, w = SCALED_CUBE_SIZE, h = SCALED_CUBE_SIZE}
-                position.position.y = position.position.y + SCALED_CUBE_SIZE
-                local shellCoordinate = self:getReferenceBlockIDAsEntity(entityID, 77)
-                entity.spritesheet:setSpritesheetCoordinates(MapInstance:getEnemyCoord(entityID + 37))
-                entity:remove('animation_component')
-            end
-        end)
-        koopa:give('enemy', ENEMY_TYPE.KOOPA_PARATROOPA)
-    elseif referenceID == 44 then -- PIRHANNA PLANT
-        local pirhanna = Concord.entity(world)
-        pirhanna:give('position', {x = (coordinateX-1) * SCALED_CUBE_SIZE + SCALED_CUBE_SIZE / 2, y = (coordinateY-1) * SCALED_CUBE_SIZE},
-                                  {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE * 2},
-                                  {x = 24, y = 48, w = 16, h = 16})
-        local position = pirhanna.position
-        pirhanna:give('texture', ENEMY_TILESHEET_IMG)
-        pirhanna:give('spritesheet', pirhanna.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE * 2, 1,
+                return entity.position.position.y <= piranha.pipeCoordinates.y - SCALED_CUBE_SIZE * 2
+            end,
+            function(entity)
+                entity.position:setBottom(piranha.pipeCoordinates.y)
+                entity.moving_component.velocity.y = 0
+                entity:remove('wait_until_component')
+            end)
+
+            piranha.inPipe = false
+        else
+            entity.moving_component.velocity.y = 1
+            entity:give('wait_until_component',
+            function(entity)
+                return entity.position.position.y >= piranha.pipeCoordinates.y --+ SCALED_CUBE_SIZE * 2
+            end,
+            function(entity)
+                entity.position:setTop(piranha.pipeCoordinates.y)
+                entity.moving_component.velocity.y = 0
+                entity:remove('wait_until_component')
+            end)
+
+            piranha.inPipe = true
+        end
+    end, 3 * MAX_FPS)
+end
+
+function MapSystem:createBlooper(x, y, entityID)
+    local blooper = Concord.entity(self.world)
+    blooper:give('position', {x = (x - 1) * SCALED_CUBE_SIZE, y = (y - 1) * SCALED_CUBE_SIZE},
+                             {x = SCALED_CUBE_SIZE, y = 2 * SCALED_CUBE_SIZE},
+                             {x = 0, y = SCALED_CUBE_SIZE / 2, w = SCALED_CUBE_SIZE, h = SCALED_CUBE_SIZE})
+    local position = blooper.position
+    blooper:give('texture', ENEMY_TILESHEET_IMG)
+    blooper:give('spritesheet', blooper.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE * 2, 1,
                                                  1, 0, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE,
-                                                 MapInstance:getEnemyCoord(entityID) )
-        pirhanna:give('animation_component', {entityID, entityID + 1}, 4, MapInstance:getEnemyIDCoordinates())
-        pirhanna:give('moving_component', {x = 0, y = 0}, {x = 0, y = 0})
-        -- TO DO: I don't know why this component casues that game is lagged
-        --pirhanna:give('move_outside_camera_component')
-        pirhanna:give('collision_exempt_component')
-        pirhanna:give('friction_exempt_component')
-        pirhanna:give('enemy', ENEMY_TYPE.PIRANHA_PLANT)
-        pirhanna:give('piranha_plant_component')
-        local piranhaComponent = pirhanna.piranha_plant_component
-        piranhaComponent.pipeCoordinates = {x = position.position.x, y = position.position.y + SCALED_CUBE_SIZE * 2}
+                                                 MapInstance:getEnemyCoord(entityID))
+    blooper:give('animation_component', {entityID, entityID + 1}, 2, MapInstance:getEnemyIDCoordinates())
+    blooper:give('moving_component', {x = 0, y = 0}, {x = 0, y = -0.5})
+    local move = blooper.moving_component
+    blooper:give('gravity_component')
+    blooper:give('friction_exempt_component')
+    blooper:give('collision_exempt_component')
+    blooper:give('timer_component',
+    function(entity)
+        if not CameraInstance:inCameraRange(position) then
+            return
+        end
 
-        pirhanna:give('timer_component', 
+        entity:remove('gravity_component')
+        move.acceleration.y = 0
+
+        local playerPosition = self.world:getSystem(PlayerSystem):getMario().position
+
+        if playerPosition.position.x > position.position.x then
+            move.velocity.x = 3.0
+        else
+            move.velocity.x = -3.0
+        end
+
+        if position.position.y < CameraInstance:getCameraCenterY() then
+            move.velocity.y = 3.0
+        else
+            move.velocity.y = -3.0
+        end
+
+        entity:give('callback_component',
         function(entity)
-            local piranha = entity.piranha_plant_component
-            if piranha.inPipe then
-                entity.moving_component.velocity.y = -1
-                entity:give('wait_until_component',
-                function(entity)
-                    return entity.position.position.y <= piranha.pipeCoordinates.y - SCALED_CUBE_SIZE * 2
-                end,
-                function(entity)
-                    entity.position:setBottom(piranha.pipeCoordinates.y)
-                    entity.moving_component.velocity.y = 0
-                    entity:remove('wait_until_component')
-                end)
+            entity:give('gravity_component')
+            move.velocity.x = 0
+            move.velocity.y = 0
+            move.acceleration.y = -0.5
+        end, MAX_FPS / 2)
+    end, MAX_FPS)
 
-                piranha.inPipe = false
-            else
-                entity.moving_component.velocity.y = 1
-                entity:give('wait_until_component',
-                function(entity)
-                    return entity.position.position.y >= piranha.pipeCoordinates.y --+ SCALED_CUBE_SIZE * 2
-                end,
-                function(entity)
-                    entity.position:setTop(piranha.pipeCoordinates.y)
-                    entity.moving_component.velocity.y = 0
-                    entity:remove('wait_until_component')
-                end)
+    blooper:give('enemy', ENEMY_TYPE.BLOOPER)
+end
 
-                piranha.inPipe = true
-            end
-        end, 3 * MAX_FPS)
-    elseif referenceID == 48 then -- BLOOPER
-        local blooper = Concord.entity(world)
-        blooper:give('position', {x = (coordinateX - 1) * SCALED_CUBE_SIZE, y = (coordinateY-1) * SCALED_CUBE_SIZE},
-                                 {x = SCALED_CUBE_SIZE, y = 2 * SCALED_CUBE_SIZE},
-                                 {x = 0, y = SCALED_CUBE_SIZE / 2, w = SCALED_CUBE_SIZE, h = SCALED_CUBE_SIZE})
-        local position = blooper.position
-        blooper:give('texture', ENEMY_TILESHEET_IMG)
-        blooper:give('spritesheet', blooper.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE * 2, 1,
-                                                     1, 0, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE,
-                                                     MapInstance:getEnemyCoord(entityID))
-        blooper:give('animation_component', {entityID, entityID + 1}, 2, MapInstance:getEnemyIDCoordinates())
-        blooper:give('moving_component', {x = 0, y = 0}, {x = 0, y = -0.5})
-        local move = blooper.moving_component
-        blooper:give('gravity_component')
-        blooper:give('friction_exempt_component')
-        blooper:give('collision_exempt_component')
-        blooper:give('timer_component',
-        function(entity)
-            if not CameraInstance:inCameraRange(position) then
-                return
-            end
-
-            entity:remove('gravity_component')
-            move.acceleration.y = 0
-
-            local playerPosition = world:getSystem(PlayerSystem):getMario().position
-
-            if playerPosition.position.x > position.position.x then
-                move.velocity.x = 3.0
-            else
-                move.velocity.x = -3.0
-            end
-
-            if position.position.y < CameraInstance:getCameraCenterY() then
-                move.velocity.y = 3.0
-            else
-                move.velocity.y = -3.0
-            end
-
-            entity:give('callback_component',
-            function(entity)
-                entity:give('gravity_component')
-                move.velocity.x = 0
-                move.velocity.y = 0
-                move.acceleration.y = -0.5
-            end, MAX_FPS / 2)
-        end, MAX_FPS)
-
-        blooper:give('enemy', ENEMY_TYPE.BLOOPER)
-    elseif referenceID == 50 then -- LAKITU
-        local lakitu = Concord.entity(world)
-        lakitu:give('position', {x = (coordinateX-1) * SCALED_CUBE_SIZE, y = (coordinateY-1) * SCALED_CUBE_SIZE},
+function MapSystem:createLakitu(x, y, entityID)
+    local lakitu = Concord.entity(self.world)
+        lakitu:give('position', {x = (x - 1) * SCALED_CUBE_SIZE, y = (y - 1) * SCALED_CUBE_SIZE},
                                 {x = SCALED_CUBE_SIZE, y = 2 * SCALED_CUBE_SIZE})
         lakitu:give('texture', ENEMY_TILESHEET_IMG)
         lakitu:give('spritesheet', lakitu.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE * 2, 1,
@@ -1128,7 +1202,7 @@ function MapSystem:createEnemyEntity(coordinateX, coordinateY, entityID, referen
         local createSpine = function(entity)
             local position = entity.position
             local texture = entity.texture
-            local spine = Concord.entity(world)
+            local spine = Concord.entity(self.world)
             spine:give('position', {x = position.position.x, y = position.position.y}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
             spine:give('texture', ENEMY_TILESHEET_IMG)
             spine:give('spritesheet', spine.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE, 1, 1,
@@ -1204,248 +1278,256 @@ function MapSystem:createEnemyEntity(coordinateX, coordinateY, entityID, referen
         end
 
         lakitu:give('timer_component', throwSpine, 3 * MAX_FPS)
-    elseif referenceID == 56 then -- HAMMER BRO
-        local entity = Concord.entity(world)
-        entity:give('position', {x = (coordinateX-1) * SCALED_CUBE_SIZE, y = (coordinateY-1) * SCALED_CUBE_SIZE},
-                                {x = SCALED_CUBE_SIZE, y = 2 * SCALED_CUBE_SIZE})
-        local position = entity.position
-        entity:give('texture', ENEMY_TILESHEET_IMG)
-        local texture = entity.texture
-        entity:give('spritesheet', texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE * 2, 1,
-                                            1, 0, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE,
-                                            MapInstance:getEnemyCoord(entityID))
-        entity:give('moving_component', {x = 2, y = 0}, {x = 0, y = 0})
-        entity:give('gravity_component')
-        entity:give('friction_exempt_component')
+end
 
-        local armsBackID = self:getReferenceEnemyIDAsEntity(entityID, 58)
-        local hammerID = self:getReferenceEnemyIDAsEntity(entityID, 60)
+function MapSystem:createHammerBro(x, y, entityID)
+    local entity = Concord.entity(self.world)
+    entity:give('position', {x = (x - 1) * SCALED_CUBE_SIZE, y = (y - 1) * SCALED_CUBE_SIZE},
+                            {x = SCALED_CUBE_SIZE, y = 2 * SCALED_CUBE_SIZE})
+    local position = entity.position
+    entity:give('texture', ENEMY_TILESHEET_IMG)
+    local texture = entity.texture
+    entity:give('spritesheet', texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE * 2, 1,
+                                        1, 0, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE,
+                                        MapInstance:getEnemyCoord(entityID))
+    entity:give('moving_component', {x = 2, y = 0}, {x = 0, y = 0})
+    entity:give('gravity_component')
+    entity:give('friction_exempt_component')
 
-        local armsDownAnimation = {entityID, entityID + 1}
-        local armsBackAnimation = {armsBackID, armsBackID + 1}
+    local armsBackID = self:getReferenceEnemyIDAsEntity(entityID, 58)
+    local hammerID = self:getReferenceEnemyIDAsEntity(entityID, 60)
 
-        entity:give('animation_component', armsBackAnimation, 4, MapInstance:getEnemyIDCoordinates())
-        local animation = entity.animation_component
-        local throwHammer = 
+    local armsDownAnimation = {entityID, entityID + 1}
+    local armsBackAnimation = {armsBackID, armsBackID + 1}
+
+    entity:give('animation_component', armsBackAnimation, 4, MapInstance:getEnemyIDCoordinates())
+    local animation = entity.animation_component
+    local throwHammer = 
+    function(entity)
+        animation.frameIDs = armsBackAnimation
+        -- Create hammer
+        local hammer = Concord.entity(self.world)
+        hammer:give('position', {x = 0, y = position.position.y}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
+        local hammerPosition = hammer.position
+        hammerPosition:setCenterX(position:getCenterX())
+        hammer:give('texture', ENEMY_TILESHEET_IMG)
+        hammer.texture:setHorizontalFlipped(texture:isHorizontalFlipped())
+
+        hammer:give('spritesheet', hammer.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE, 1, 1,
+                                                   0, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE,
+                                                   MapInstance:getEnemyCoord(hammerID))
+        
+        hammer:give('particle')
+        hammer:give('destroy_outside_camera_component')
+        entity.hammer_bro_component.hammer = hammer
+        entity:give('callback_component',
         function(entity)
-            animation.frameIDs = armsBackAnimation
-            -- Create hammer
-            local hammer = Concord.entity(world)
-            hammer:give('position', {x = 0, y = position.position.y}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
-            local hammerPosition = hammer.position
-            hammerPosition:setCenterX(position:getCenterX())
-            hammer:give('texture', ENEMY_TILESHEET_IMG)
-            hammer.texture:setHorizontalFlipped(texture:isHorizontalFlipped())
-
-            hammer:give('spritesheet', hammer.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE, 1, 1,
-                                                       0, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE,
-                                                       MapInstance:getEnemyCoord(hammerID))
-            
-            hammer:give('particle')
-            hammer:give('destroy_outside_camera_component')
-            entity.hammer_bro_component.hammer = hammer
-            entity:give('callback_component',
-            function(entity)
-                -- Fail safe in case if crushed before hammer is thrown
-                if not entity:has('hammer_bro_component') then
-                    world:removeEntity(hammer)
-                    return
-                end
-
-                animation.frameIDs = armsDownAnimation
-                hammerPosition:setBottom(position:getTop())
-
-                local xMoveVal
-                if texture:isHorizontalFlipped() then
-                    hammerPosition:setLeft(position:getRight())
-                    xMoveVal = 3.0
-                else
-                    hammerPosition:setRight(position:getLeft())
-                    xMoveVal = -3.0
-                end
-
-                hammer:give('moving_component', {x = xMoveVal, y = -6}, {x = 0, y = 0})
-                hammer:give('friction_exempt_component')
-                hammer:give('gravity_component')
-                hammer:give('projectile', PROJECTTILE_TYPE.OTHER)
-                entity.hammer_bro_component.lastThrowTime = 0
-            end, MAX_FPS * 0.5)
-        end
-
-        entity:give('hammer_bro_component', throwHammer)
-
-        entity:give('crushable_component', 
-        function(entity)
-            entity.texture:setVerticalFlipped(true)
-            entity:give('particle')
-            entity:remove('callback_component')
-            entity:remove('hammer_bro_component')
-            entity:give('dead_component')
-        end
-        )
-
-        entity:give('enemy', ENEMY_TYPE.HAMMER_BRO)
-    elseif referenceID == 61 then -- BOWSER
-        local bowser = Concord.entity(world)
-        bowser:give('position', {x = (coordinateX - 1) * SCALED_CUBE_SIZE, y = (coordinateY - 1) * SCALED_CUBE_SIZE },
-                                {x = 2 * SCALED_CUBE_SIZE, y = 2 * SCALED_CUBE_SIZE })
-        local position = bowser.position
-        bowser:give('texture', ENEMY_TILESHEET_IMG)
-        local texture = bowser.texture
-        bowser:give('spritesheet', bowser.texture, ORIGINAL_CUBE_SIZE * 2, ORIGINAL_CUBE_SIZE * 2,
-                                  1, 1, 0, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE,
-                                  MapInstance:getEnemyCoord(entityID) )
-        bowser:give('moving_component', {x = 0, y = 0}, {x = 0, y = -0.3})
-        local move = bowser.moving_component
-        bowser:give('gravity_component')
-        bowser:give('friction_exempt_component')
-
-        local mouthOpenID = self:getReferenceEnemyIDAsEntity(entityID, 61)
-        local mouthClosedID = self:getReferenceEnemyIDAsEntity(entityID, 65)
-        local hammerID = self:getReferenceEnemyIDAsEntity(entityID, 60)
-
-        local mouthOpenAnimation = {mouthOpenID, mouthOpenID + 2}
-        local mouthClosedAnimation = {mouthClosedID, mouthClosedID + 2}
-
-        bowser:give('animation_component', mouthOpenAnimation, 2, MapInstance:getEnemyIDCoordinates())
-        local animation = bowser.animation_component
-        local bowserMovements = {
-            function(entity) -- MOVE
-                local bowserComponent = entity.bowser_component
-                if bowserComponent.lastMoveDirection == DIRECTION.LEFT then
-                    move.velocity.x = 1
-                    bowserComponent.lastMoveDirection = DIRECTION.RIGHT
-                else
-                    move.velocity.x = 1
-                    bowserComponent.lastMoveDirection = DIRECTION.LEFT
-                end
-                bowserComponent.lastMoveTime = 0
-            end,
-            function(entity) -- STOP
-                move.velocity.x = 0
-                entity.bowser_component.lastStopTime = 0
-            end,
-            function(entity) -- JUMP
-                local bowserComponent = entity.bowser_component
-                move.velocity.y = -5.0
-                move.acceleration.y = -0.35
-                bowserComponent.lastJumpTime = 0
+            -- Fail safe in case if crushed before hammer is thrown
+            if not entity:has('hammer_bro_component') then
+                world:removeEntity(hammer)
+                return
             end
-        }
 
-        local bowserAttacks = {
-            function(entity, number) -- LAUNCH FIRE
-                local bowserComponent = entity.bowser_component
-                animation.frameIDs = mouthClosedAnimation
-                entity:give('callback_component', 
-                function(entity, number)
-                    if number == nil then
-                        number = 0
-                    end
+            animation.frameIDs = armsDownAnimation
+            hammerPosition:setBottom(position:getTop())
 
-                    animation.frameIDs = mouthOpenAnimation
-                    local blastSound = Concord.entity(world)
-                    blastSound:give('sound_component', SOUND_ID.BOWSER_FIRE)
+            local xMoveVal
+            if texture:isHorizontalFlipped() then
+                hammerPosition:setLeft(position:getRight())
+                xMoveVal = 3.0
+            else
+                hammerPosition:setRight(position:getLeft())
+                xMoveVal = -3.0
+            end
 
-                    local fireBlast = Concord.entity(world)
-                    fireBlast:give('position', {x = 0, y = position:getTop() + 4},
-                                               {x = 1.5 * SCALED_CUBE_SIZE, y = 0.5 * SCALED_CUBE_SIZE })
-                    local blastPosition = fireBlast.position
-                    fireBlast:give('texture', ENEMY_TILESHEET_IMG)
-                    local blastTexture = fireBlast.texture
-                    fireBlast:give('spritesheet', blastTexture, ORIGINAL_CUBE_SIZE + ORIGINAL_CUBE_SIZE / 2, ORIGINAL_CUBE_SIZE / 2, 1,
-                                                                1, 0, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE,
-                                                                MapInstance:getEnemyCoord(470))
-                    fireBlast:give('animation_component', {470, 505}, 16, MapInstance:getEnemyIDCoordinates())
-                    fireBlast:give('moving_component', {x = 0, y = 0}, {x = 0, y = 0})
-                    local blastMove = fireBlast.moving_component
-                    fireBlast:give('friction_exempt_component')
-                    fireBlast:give('destroy_outside_camera_component')
-                    if texture:isHorizontalFlipped() then
-                        blastMove.velocity.x = 3
-                        blastPosition:setLeft(position:getRight())
-                        blastTexture:setHorizontalFlipped(true)
-                    else
-                        blastMove.velocity.x = -3
-                        blastPosition:setRight(position:getLeft())
-                        blastTexture:setHorizontalFlipped(false)
-                    end
+            hammer:give('moving_component', {x = xMoveVal, y = -6}, {x = 0, y = 0})
+            hammer:give('friction_exempt_component')
+            hammer:give('gravity_component')
+            hammer:give('projectile', PROJECTTILE_TYPE.OTHER)
+            entity.hammer_bro_component.lastThrowTime = 0
+        end, MAX_FPS * 0.5)
+    end
 
-                    fireBlast:give('projectile', PROJECTTILE_TYPE.OTHER)
-                end, MAX_FPS * 2)
-                bowserComponent.lastAttackTime = 0
-            end,
-            function(entity, number) -- THROW HAMMERS
-                local bowserComponent = entity.bowser_component
+    entity:give('hammer_bro_component', throwHammer)
+
+    entity:give('crushable_component', 
+    function(entity)
+        entity.texture:setVerticalFlipped(true)
+        entity:give('particle')
+        entity:remove('callback_component')
+        entity:remove('hammer_bro_component')
+        entity:give('dead_component')
+    end
+    )
+
+    entity:give('enemy', ENEMY_TYPE.HAMMER_BRO)
+end
+
+function MapSystem:createBowser(x, y, entityID)
+    local bowser = Concord.entity(self.world)
+    bowser:give('position', {x = (x - 1) * SCALED_CUBE_SIZE, y = (y - 1) * SCALED_CUBE_SIZE },
+                            {x = 2 * SCALED_CUBE_SIZE, y = 2 * SCALED_CUBE_SIZE })
+    local position = bowser.position
+    bowser:give('texture', ENEMY_TILESHEET_IMG)
+    local texture = bowser.texture
+    bowser:give('spritesheet', bowser.texture, ORIGINAL_CUBE_SIZE * 2, ORIGINAL_CUBE_SIZE * 2,
+                              1, 1, 0, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE,
+                              MapInstance:getEnemyCoord(entityID) )
+    bowser:give('moving_component', {x = 0, y = 0}, {x = 0, y = -0.3})
+    local move = bowser.moving_component
+    bowser:give('gravity_component')
+    bowser:give('friction_exempt_component')
+
+    local mouthOpenID = self:getReferenceEnemyIDAsEntity(entityID, 61)
+    local mouthClosedID = self:getReferenceEnemyIDAsEntity(entityID, 65)
+    local hammerID = self:getReferenceEnemyIDAsEntity(entityID, 60)
+
+    local mouthOpenAnimation = {mouthOpenID, mouthOpenID + 2}
+    local mouthClosedAnimation = {mouthClosedID, mouthClosedID + 2}
+
+    bowser:give('animation_component', mouthOpenAnimation, 2, MapInstance:getEnemyIDCoordinates())
+    local animation = bowser.animation_component
+    local bowserMovements = {
+        function(entity) -- MOVE
+            local bowserComponent = entity.bowser_component
+            if bowserComponent.lastMoveDirection == DIRECTION.LEFT then
+                move.velocity.x = 1
+                bowserComponent.lastMoveDirection = DIRECTION.RIGHT
+            else
+                move.velocity.x = 1
+                bowserComponent.lastMoveDirection = DIRECTION.LEFT
+            end
+            bowserComponent.lastMoveTime = 0
+        end,
+        function(entity) -- STOP
+            move.velocity.x = 0
+            entity.bowser_component.lastStopTime = 0
+        end,
+        function(entity) -- JUMP
+            local bowserComponent = entity.bowser_component
+            move.velocity.y = -5.0
+            move.acceleration.y = -0.35
+            bowserComponent.lastJumpTime = 0
+        end
+    }
+
+    local bowserAttacks = {
+        function(entity, number) -- LAUNCH FIRE
+            local bowserComponent = entity.bowser_component
+            animation.frameIDs = mouthClosedAnimation
+            entity:give('callback_component', 
+            function(entity, number)
                 if number == nil then
                     number = 0
                 end
 
-                for i = 0, number - 1 do
-                    local hammer = Concord.entity(world)
-                    hammer:give('callback_component', 
-                    function(hammer)
-                        hammer:give('position', {x = position:getLeft(), y = position:getTop()}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE })
-                        local hammerPosition = hammer.position
-                        if texture:isHorizontalFlipped() then
-                            hammerPosition:setLeft(position:getRight())
-                        else
-                            hammerPosition:setRight(position:getLeft())
-                        end
+                animation.frameIDs = mouthOpenAnimation
+                local blastSound = Concord.entity(self.world)
+                blastSound:give('sound_component', SOUND_ID.BOWSER_FIRE)
 
-                        hammer:give('texture', ENEMY_TILESHEET_IMG)
-                        hammer:give('spritesheet', hammer.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE, 1, 1, 0, ORIGINAL_CUBE_SIZE,
-                                                                   ORIGINAL_CUBE_SIZE, MapInstance:getEnemyCoord(hammerID))
-                        local randomXVelocity = -(love.math.random() + 2.25)
-                        local randomYVelocity = -(love.math.random() * 0.5 + 6)
-                        
-                        if texture:isHorizontalFlipped() then
-                            randomXVelocity = randomXVelocity * -1
-                        end
-
-                        hammer:give('moving_component', {x = randomXVelocity, y = randomYVelocity}, {x = 0, y = -0.35})
-                        hammer:give('friction_exempt_component')
-                        hammer:give('gravity_component')
-                        hammer:give('destroy_outside_camera_component')
-                        hammer:give('projectile', PROJECTTILE_TYPE.OTHER)
-                        hammer:give('particle')
-                    end, i * 4)
-
-                    bowserComponent.lastAttackTime = 0
+                local fireBlast = Concord.entity(self.world)
+                fireBlast:give('position', {x = 0, y = position:getTop() + 4},
+                                           {x = 1.5 * SCALED_CUBE_SIZE, y = 0.5 * SCALED_CUBE_SIZE })
+                local blastPosition = fireBlast.position
+                fireBlast:give('texture', ENEMY_TILESHEET_IMG)
+                local blastTexture = fireBlast.texture
+                fireBlast:give('spritesheet', blastTexture, ORIGINAL_CUBE_SIZE + ORIGINAL_CUBE_SIZE / 2, ORIGINAL_CUBE_SIZE / 2, 1,
+                                                            1, 0, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE,
+                                                            MapInstance:getEnemyCoord(470))
+                fireBlast:give('animation_component', {470, 505}, 16, MapInstance:getEnemyIDCoordinates())
+                fireBlast:give('moving_component', {x = 0, y = 0}, {x = 0, y = 0})
+                local blastMove = fireBlast.moving_component
+                fireBlast:give('friction_exempt_component')
+                fireBlast:give('destroy_outside_camera_component')
+                if texture:isHorizontalFlipped() then
+                    blastMove.velocity.x = 3
+                    blastPosition:setLeft(position:getRight())
+                    blastTexture:setHorizontalFlipped(true)
+                else
+                    blastMove.velocity.x = -3
+                    blastPosition:setRight(position:getLeft())
+                    blastTexture:setHorizontalFlipped(false)
                 end
 
+                fireBlast:give('projectile', PROJECTTILE_TYPE.OTHER)
+            end, MAX_FPS * 2)
+            bowserComponent.lastAttackTime = 0
+        end,
+        function(entity, number) -- THROW HAMMERS
+            local bowserComponent = entity.bowser_component
+            if number == nil then
+                number = 0
             end
-        }
 
-        bowser:give('bowser_component', bowserAttacks, bowserMovements)
-        bowser:give('enemy', ENEMY_TYPE.BOWSER)
-    elseif referenceID == 70 then -- GOOMBA
-        local entity = Concord.entity(world)
-        entity:give('position', {x = (coordinateX-1) * SCALED_CUBE_SIZE, y = (coordinateY-1) * SCALED_CUBE_SIZE}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
-        entity:give('texture', ENEMY_TILESHEET_IMG)
-        entity:give('spritesheet', entity.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE, 1, 1, 0, ORIGINAL_CUBE_SIZE,
-                                           ORIGINAL_CUBE_SIZE, MapInstance:getEnemyCoord(entityID) )
-        local firstAnimationID = entityID
-        entity:give('animation_component', 
-                {firstAnimationID, firstAnimationID + 1}, --frameIDs
-                8,                                   --framesPerSecond
-                MapInstance.EnemyIDCoordinates)      --coordinateSupplier
+            for i = 0, number - 1 do
+                local hammer = Concord.entity(self.world)
+                hammer:give('callback_component', 
+                function(hammer)
+                    hammer:give('position', {x = position:getLeft(), y = position:getTop()}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE })
+                    local hammerPosition = hammer.position
+                    if texture:isHorizontalFlipped() then
+                        hammerPosition:setLeft(position:getRight())
+                    else
+                        hammerPosition:setRight(position:getLeft())
+                    end
 
-        entity:give('moving_component', {x = -ENEMY_SPEED, y = 0}, {x = 0, y = 0})
-        entity:give('crushable_component', 
-        function(entity)
-            entity:remove('animation_component')
-            entity.spritesheet:setSpritesheetCoordinates(MapInstance:getEnemyCoord(entityID + 2))
-            entity:give('dead_component')
-            entity:give('frozen_component')
-            entity:give('destroy_delayed_component', 20)
-        end)
+                    hammer:give('texture', ENEMY_TILESHEET_IMG)
+                    hammer:give('spritesheet', hammer.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE, 1, 1, 0, ORIGINAL_CUBE_SIZE,
+                                                               ORIGINAL_CUBE_SIZE, MapInstance:getEnemyCoord(hammerID))
+                    local randomXVelocity = -(love.math.random() + 2.25)
+                    local randomYVelocity = -(love.math.random() * 0.5 + 6)
+                    
+                    if texture:isHorizontalFlipped() then
+                        randomXVelocity = randomXVelocity * -1
+                    end
 
-        entity:give('gravity_component')
-        entity:give('enemy', ENEMY_TYPE.GOOMBA)
-    elseif referenceID == 71 then -- GOOMBA (shifted to the right)
-        local entity = Concord.entity(world)
-        entity:give('position', {x = (coordinateX-1) * SCALED_CUBE_SIZE, y = (coordinateY-1) * SCALED_CUBE_SIZE}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
+                    hammer:give('moving_component', {x = randomXVelocity, y = randomYVelocity}, {x = 0, y = -0.35})
+                    hammer:give('friction_exempt_component')
+                    hammer:give('gravity_component')
+                    hammer:give('destroy_outside_camera_component')
+                    hammer:give('projectile', PROJECTTILE_TYPE.OTHER)
+                    hammer:give('particle')
+                end, i * 4)
+
+                bowserComponent.lastAttackTime = 0
+            end
+
+        end
+    }
+
+    bowser:give('bowser_component', bowserAttacks, bowserMovements)
+    bowser:give('enemy', ENEMY_TYPE.BOWSER)
+end
+
+function MapSystem:createGoomba(x, y, entityID)
+    local entity = Concord.entity(self.world)
+    entity:give('position', {x = (x - 1) * SCALED_CUBE_SIZE, y = (y - 1) * SCALED_CUBE_SIZE}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
+    entity:give('texture', ENEMY_TILESHEET_IMG)
+    entity:give('spritesheet', entity.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE, 1, 1, 0, ORIGINAL_CUBE_SIZE,
+                                       ORIGINAL_CUBE_SIZE, MapInstance:getEnemyCoord(entityID) )
+    local firstAnimationID = entityID
+    entity:give('animation_component', 
+            {firstAnimationID, firstAnimationID + 1}, --frameIDs
+            8,                                   --framesPerSecond
+            MapInstance.EnemyIDCoordinates)      --coordinateSupplier
+
+    entity:give('moving_component', {x = -ENEMY_SPEED, y = 0}, {x = 0, y = 0})
+    entity:give('crushable_component', 
+    function(entity)
+        entity:remove('animation_component')
+        entity.spritesheet:setSpritesheetCoordinates(MapInstance:getEnemyCoord(entityID + 2))
+        entity:give('dead_component')
+        entity:give('frozen_component')
+        entity:give('destroy_delayed_component', 20)
+    end)
+
+    entity:give('gravity_component')
+    entity:give('enemy', ENEMY_TYPE.GOOMBA)
+end
+
+function MapSystem:createShiftedGoomba(x, y, entityID)
+    local entity = Concord.entity(self.world)
+        entity:give('position', {x = (x - 1) * SCALED_CUBE_SIZE, y = (y - 1) * SCALED_CUBE_SIZE}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
         entity:give('texture', ENEMY_TILESHEET_IMG)
         entity:give('spritesheet', entity.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE, 1, 1, 0, ORIGINAL_CUBE_SIZE,
                                            ORIGINAL_CUBE_SIZE, MapInstance:getEnemyCoord(entityID) )
@@ -1467,161 +1549,169 @@ function MapSystem:createEnemyEntity(coordinateX, coordinateY, entityID, referen
 
         entity:give('gravity_component')
         entity:give('enemy', ENEMY_TYPE.GOOMBA)
-    elseif referenceID == 81 then -- CHEEP CHEEP
-        local entity = Concord.entity(world)
-        entity:give('position', {x = (coordinateX-1) * SCALED_CUBE_SIZE, y = (coordinateY-1) * SCALED_CUBE_SIZE}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
+end
+
+function MapSystem:createCheepCheep(x, y, entityID)
+    local entity = Concord.entity(self.world)
+    entity:give('position', {x = (x - 1) * SCALED_CUBE_SIZE, y = (y - 1) * SCALED_CUBE_SIZE}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
+    entity:give('texture', ENEMY_TILESHEET_IMG)
+    entity:give('spritesheet', entity.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE, 1, 1, 0,
+                                               ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE,
+                                               MapInstance:getEnemyCoord(entityID))
+    entity:give('animation_component', {entityID, entityID + 1}, 6, MapInstance:getEnemyIDCoordinates())
+    entity:give('moving_component', {x = -ENEMY_SPEED, y = 0}, {x = 0, y = 0})
+    entity:give('collision_exempt_component')
+    entity:give('friction_exempt_component')
+    entity:give('enemy', ENEMY_TYPE.CHEEP_CHEEP)
+end
+
+function MapSystem:createBuzzyBeetle(x, y, entityID)
+    local entity = Concord.entity(self.world)
+    entity:give('position', {x = (x - 1) * SCALED_CUBE_SIZE, y = (y - 1) * SCALED_CUBE_SIZE},
+                            {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
+
+    entity:give('texture', ENEMY_TILESHEET_IMG)
+    entity:give('spritesheet', entity.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE, 1, 1, 0,
+                                               ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE,
+                                               MapInstance:getEnemyCoord(entityID))
+    local firstAnimationID = entityID
+    local deadID = self:getReferenceEnemyIDAsEntity(entityID, 89)
+
+    entity:give('animation_component', {firstAnimationID, firstAnimationID + 1}, 6, MapInstance:getEnemyIDCoordinates())
+    entity:give('moving_component', {x = -ENEMY_SPEED, y = 0}, {x = 0, y = 0})
+    entity:give('gravity_component')
+
+    entity:give('crushable_component', 
+    function(entity) 
+        entity.enemy.type = ENEMY_TYPE.KOOPA_SHELL
+        entity.moving_component.velocity.x = 0
+        entity:give('destroy_outside_camera_component')
+        entity.spritesheet:setSpritesheetCoordinates(MapInstance:getEnemyCoord(deadID))
+        entity:remove('animation_component')
+    end)
+
+    entity:give('enemy', ENEMY_TYPE.BUZZY_BEETLE)
+end
+
+function MapSystem:createRedKoopa(x, y, entityID)
+    local entity = Concord.entity(self.world)
+    entity:give('position', {x = (x - 1) * SCALED_CUBE_SIZE, y = (y - 1) * SCALED_CUBE_SIZE},
+                            {x = SCALED_CUBE_SIZE, y = 2 * SCALED_CUBE_SIZE},
+                            {x = 0, y = SCALED_CUBE_SIZE, w = SCALED_CUBE_SIZE, h = SCALED_CUBE_SIZE})
+    entity:give('texture', ENEMY_TILESHEET_IMG)
+    entity:give('spritesheet', entity.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE * 2, 1, 1, 0, ORIGINAL_CUBE_SIZE,
+        ORIGINAL_CUBE_SIZE, MapInstance:getEnemyCoord(entityID) )
+    
+    local firstAnimationID = entityID
+    entity:give('animation_component', 
+                {firstAnimationID, firstAnimationID + 1}, --frameIDs
+                6,                                   --framesPerSecond
+                MapInstance.EnemyIDCoordinates)      --coordinateSupplier
+
+    entity:give('moving_component', {x = -ENEMY_SPEED, y = 0}, {x = 0, y = 0})
+    entity:give('gravity_component')
+    entity:give('crushable_component', 
+    function(entity)
+        entity:remove('animation_component')
+        entity.enemy.type = ENEMY_TYPE.KOOPA_SHELL
+        entity.moving_component.velocity.x = 0
+        entity.spritesheet:setEntityHeight(ORIGINAL_CUBE_SIZE)
+
+        entity:give('destroy_outside_camera_component')
+        local position = entity.position
+        position.scale.y = SCALED_CUBE_SIZE
+        position.hitbox = {x = 0, y = 0, w = SCALED_CUBE_SIZE, h = SCALED_CUBE_SIZE}
+        position.position.y = position.position.y + SCALED_CUBE_SIZE
+
+        entity.spritesheet:setSpritesheetCoordinates(MapInstance:getEnemyCoord(entityID + 39))
+    end)
+
+    entity:give('enemy', ENEMY_TYPE.KOOPA)
+end
+
+function MapSystem:createRedCheepCheep(x, y, entityID)
+    if self.scene:getBackgroundMap():getLevelData()[y][x] == 186 then -- if underwater
+        local entity = Concord.entity(self.world)
         entity:give('texture', ENEMY_TILESHEET_IMG)
-        entity:give('spritesheet', entity.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE, 1, 1, 0,
-                                                   ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE,
+        entity:give('position', {x = (x - 1) * SCALED_CUBE_SIZE, y = (y - 1) * SCALED_CUBE_SIZE}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
+        entity:give('spritesheet', entity.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE, 1, 1,
+                                                   0, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE,
                                                    MapInstance:getEnemyCoord(entityID))
         entity:give('animation_component', {entityID, entityID + 1}, 6, MapInstance:getEnemyIDCoordinates())
         entity:give('moving_component', {x = -ENEMY_SPEED, y = 0}, {x = 0, y = 0})
         entity:give('collision_exempt_component')
         entity:give('friction_exempt_component')
         entity:give('enemy', ENEMY_TYPE.CHEEP_CHEEP)
-    elseif referenceID == 87 then -- BUZZY BEETLE
-        local entity = Concord.entity(world)
-        entity:give('position', {x = (coordinateX - 1) * SCALED_CUBE_SIZE, y = (coordinateY - 1) * SCALED_CUBE_SIZE},
-                                {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
-
-        entity:give('texture', ENEMY_TILESHEET_IMG)
-        entity:give('spritesheet', entity.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE, 1, 1, 0,
-                                                   ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE,
-                                                   MapInstance:getEnemyCoord(entityID))
-        local firstAnimationID = entityID
-        local deadID = self:getReferenceEnemyIDAsEntity(entityID, 89)
-
-        entity:give('animation_component', {firstAnimationID, firstAnimationID + 1}, 6, MapInstance:getEnemyIDCoordinates())
-        entity:give('moving_component', {x = -ENEMY_SPEED, y = 0}, {x = 0, y = 0})
-        entity:give('gravity_component')
-
-        entity:give('crushable_component', 
-        function(entity) 
-            entity.enemy.type = ENEMY_TYPE.KOOPA_SHELL
-            entity.moving_component.velocity.x = 0
-            entity:give('destroy_outside_camera_component')
-            entity.spritesheet:setSpritesheetCoordinates(MapInstance:getEnemyCoord(deadID))
-            entity:remove('animation_component')
-        end)
-
-        entity:give('enemy', ENEMY_TYPE.BUZZY_BEETLE)
-    elseif referenceID == 90 then -- BULLET BILL
-    elseif referenceID == 455 then -- NORMAL KOOPA (RED)
-        local entity = Concord.entity(world)
-        entity:give('position', {x = (coordinateX-1) * SCALED_CUBE_SIZE, y = (coordinateY-1) * SCALED_CUBE_SIZE},
-                                {x = SCALED_CUBE_SIZE, y = 2 * SCALED_CUBE_SIZE},
-                                {x = 0, y = SCALED_CUBE_SIZE, w = SCALED_CUBE_SIZE, h = SCALED_CUBE_SIZE})
-        entity:give('texture', ENEMY_TILESHEET_IMG)
-        entity:give('spritesheet', entity.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE * 2, 1, 1, 0, ORIGINAL_CUBE_SIZE,
-            ORIGINAL_CUBE_SIZE, MapInstance:getEnemyCoord(entityID) )
+    else -- If in those flying patches of them idk what they're called
         
-        local firstAnimationID = entityID
-        entity:give('animation_component', 
-                    {firstAnimationID, firstAnimationID + 1}, --frameIDs
-                    6,                                   --framesPerSecond
-                    MapInstance.EnemyIDCoordinates)      --coordinateSupplier
-
-        entity:give('moving_component', {x = -ENEMY_SPEED, y = 0}, {x = 0, y = 0})
-        entity:give('gravity_component')
-        entity:give('crushable_component', 
-        function(entity)
-            entity:remove('animation_component')
-            entity.enemy.type = ENEMY_TYPE.KOOPA_SHELL
-            entity.moving_component.velocity.x = 0
-            entity.spritesheet:setEntityHeight(ORIGINAL_CUBE_SIZE)
-
-            entity:give('destroy_outside_camera_component')
-            local position = entity.position
-            position.scale.y = SCALED_CUBE_SIZE
-            position.hitbox = {x = 0, y = 0, w = SCALED_CUBE_SIZE, h = SCALED_CUBE_SIZE}
-            position.position.y = position.position.y + SCALED_CUBE_SIZE
-
-            entity.spritesheet:setSpritesheetCoordinates(MapInstance:getEnemyCoord(entityID + 39))
-        end)
-
-        entity:give('enemy', ENEMY_TYPE.KOOPA)
-    elseif referenceID == 498 then -- CHEEP CHEEP (RED)
-        if self.scene:getBackgroundMap():getLevelData()[coordinateY][coordinateX] == 186 then -- if underwater
-            local entity = Concord.entity(world)
-            entity:give('texture', ENEMY_TILESHEET_IMG)
-            entity:give('position', {x = (coordinateX-1) * SCALED_CUBE_SIZE, y = (coordinateY-1) * SCALED_CUBE_SIZE}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
-            entity:give('spritesheet', entity.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE, 1, 1,
-                                                       0, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE,
-                                                       MapInstance:getEnemyCoord(entityID))
-            entity:give('animation_component', {entityID, entityID + 1}, 6, MapInstance:getEnemyIDCoordinates())
-            entity:give('moving_component', {x = -ENEMY_SPEED, y = 0}, {x = 0, y = 0})
-            entity:give('collision_exempt_component')
-            entity:give('friction_exempt_component')
-            entity:give('enemy', ENEMY_TYPE.CHEEP_CHEEP)
-        else -- If in those flying patches of them idk what they're called
-            
-            local entity = Concord.entity(world)
-            entity:give('position', {x = (coordinateX - 1) * SCALED_CUBE_SIZE, y = coordinateY * SCALED_CUBE_SIZE}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
-            local position = entity.position
-            entity:give('texture', ENEMY_TILESHEET_IMG, true)
-            entity.texture:setHorizontalFlipped(true)
-            entity:give('spritesheet', entity.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE, 1, 1,
-                                                       0, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE,
-                                                       MapInstance:getEnemyCoord(entityID))
-            entity:give('animation_component', {entityID, entityID + 1}, 6, MapInstance:getEnemyIDCoordinates())
-            entity:give('moving_component', {x = 0, y = 0}, {x = 0, y = 0})
-            local move = entity.moving_component
-
-            entity:give('move_outside_camera_component')
-            entity:give('gravity_component')
-            entity:give('collision_exempt_component')
-            entity:give('friction_exempt_component')
-
-            local randomValue = generateRandomNumber(0.5, 2.0)
-            entity:give('timer_component',
-            function(entity)
-                entity:give('callback_component',
-                function(entity)
-                    if CameraInstance:inCameraYRange(position) then
-                        return
-                    end
-                    position.position = {x = (coordinateX-1) * SCALED_CUBE_SIZE, y = coordinateY * SCALED_CUBE_SIZE}
-
-                    if not CameraInstance:inCameraXRange(position) then
-                        return
-                    end
-                    move.velocity.x = generateRandomNumber(2.0, 4.0)
-                    move.velocity.y = -10
-                    move.acceleration.y = -0.4542
-                end, math.floor(MAX_FPS * randomValue))
-            end, MAX_FPS * 2.5)
-
-            entity:give('crushable_component',
-            function(entity)
-                entity.texture:setVerticalFlipped(true)
-                entity.moving_component.acceleration.y = 0
-                entity:give('dead_component')
-                entity:give('particle')
-                entity:remove('timer_component')
-            end)
-            entity:give('enemy', ENEMY_TYPE.CHEEP_CHEEP)
-        end
-    elseif referenceID == 504 then -- LAVA BUBBLE
-        local entity = Concord.entity(world)
-        entity:give('position', {x = (coordinateX - 1) * SCALED_CUBE_SIZE, y = coordinateY * SCALED_CUBE_SIZE},
-                                {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
-        local resetYLevel = coordinateY * SCALED_CUBE_SIZE
-        entity:give('texture', ENEMY_TILESHEET_IMG)
-        entity:give('spritesheet', entity.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE, 1, 1, 0,
-                                                   ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE,
+        local entity = Concord.entity(self.world)
+        entity:give('position', {x = (x - 1) * SCALED_CUBE_SIZE, y = y * SCALED_CUBE_SIZE}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
+        local position = entity.position
+        entity:give('texture', ENEMY_TILESHEET_IMG, true)
+        entity.texture:setHorizontalFlipped(true)
+        entity:give('spritesheet', entity.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE, 1, 1,
+                                                   0, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE,
                                                    MapInstance:getEnemyCoord(entityID))
+        entity:give('animation_component', {entityID, entityID + 1}, 6, MapInstance:getEnemyIDCoordinates())
         entity:give('moving_component', {x = 0, y = 0}, {x = 0, y = 0})
-        entity:give('particle')
+        local move = entity.moving_component
+
+        entity:give('move_outside_camera_component')
         entity:give('gravity_component')
+        entity:give('collision_exempt_component')
+        entity:give('friction_exempt_component')
+
+        local randomValue = generateRandomNumber(0.5, 2.0)
         entity:give('timer_component',
         function(entity)
-            entity.position.position.y = resetYLevel
-            entity.moving_component.velocity.y = -10.0
-            entity.moving_component.acceleration.y = -0.40
-        end, MAX_FPS * 4)
+            entity:give('callback_component',
+            function(entity)
+                if CameraInstance:inCameraYRange(position) then
+                    return
+                end
+                position.position = {x = (x - 1) * SCALED_CUBE_SIZE, y = y * SCALED_CUBE_SIZE}
 
-        entity:give('enemy', ENEMY_TYPE.LAVA_BUBBLE)
+                if not CameraInstance:inCameraXRange(position) then
+                    return
+                end
+                move.velocity.x = generateRandomNumber(2.0, 4.0)
+                move.velocity.y = -10
+                move.acceleration.y = -0.4542
+            end, math.floor(MAX_FPS * randomValue))
+        end, MAX_FPS * 2.5)
+
+        entity:give('crushable_component',
+        function(entity)
+            entity.texture:setVerticalFlipped(true)
+            entity.moving_component.acceleration.y = 0
+            entity:give('dead_component')
+            entity:give('particle')
+            entity:remove('timer_component')
+        end)
+        entity:give('enemy', ENEMY_TYPE.CHEEP_CHEEP)
     end
+end
+
+function MapSystem:createLavaBubble(x, y, entityID)
+    local entity = Concord.entity(self.world)
+    entity:give('position', {x = (x - 1) * SCALED_CUBE_SIZE, y = y * SCALED_CUBE_SIZE},
+                            {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
+    local resetYLevel = y * SCALED_CUBE_SIZE
+    entity:give('texture', ENEMY_TILESHEET_IMG)
+    entity:give('spritesheet', entity.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE, 1, 1, 0,
+                                               ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE,
+                                               MapInstance:getEnemyCoord(entityID))
+    entity:give('moving_component', {x = 0, y = 0}, {x = 0, y = 0})
+    entity:give('particle')
+    entity:give('gravity_component')
+    entity:give('timer_component',
+    function(entity)
+        entity.position.position.y = resetYLevel
+        entity.moving_component.velocity.y = -10.0
+        entity.moving_component.acceleration.y = -0.40
+    end, MAX_FPS * 4)
+
+    entity:give('enemy', ENEMY_TYPE.LAVA_BUBBLE)
 end
 
 function MapSystem:getReferenceEnemyIDAsEntity(entityID, referenceID)
