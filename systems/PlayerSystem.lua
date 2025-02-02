@@ -34,14 +34,14 @@ function PlayerSystem:update()
     local position = self.mario.position
     local move = self.mario.moving_component
 
-    if FlagSystem:isClimbing() then
+    if world:getSystem(FlagSystem):isClimbing() then
         self.currentState = ANIMATION_STATE.SLIDING
         self:setState(self.currentState)
         self:updateCamera()
         return
     end
 
-    if WarpSystem:isWarping() then
+    if world:getSystem(WarpSystem):isWarping() then
         if move.velocity.x ~= 0 then
             self.currentState = ANIMATION_STATE.WALKING
         end
@@ -53,7 +53,7 @@ function PlayerSystem:update()
         return
     end
 
-    if WarpSystem:isClimbing() then
+    if world:getSystem(WarpSystem):isClimbing() then
         if move.velocity.y ~= 0 then
             self.currentState = ANIMATION_STATE.CLIMBING
         else
