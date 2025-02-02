@@ -40,7 +40,7 @@ end
 
 function MapSystem:createBackgroundEntity(x, y, entityID)
     local entity = Concord.entity(self.world)
-    entity:give('position', {x = (x - 1) * SCALED_CUBE_SIZE, y = (y - 1) * SCALED_CUBE_SIZE}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
+    entity:give('position', {x = (x - 1)*SCALED_CUBE_SIZE, y = (y - 1)*SCALED_CUBE_SIZE}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
     entity:give('texture', BLOCK_TILESHEET_IMG, false, false)
     entity:give('spritesheet', entity.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE, 1, 1, 1, ORIGINAL_CUBE_SIZE,
                                ORIGINAL_CUBE_SIZE, MapInstance:getBlockCoord(entityID) )
@@ -107,7 +107,7 @@ function MapSystem:createAboveForegroundEntities()
             local referenceID = self:getReferenceBlockID(entityID)
             if referenceID == 150 or referenceID == 292 then -- WARP Pipe
                 local entity = Concord.entity(self.world)
-                entity:give('position', {x = (x - 1) * SCALED_CUBE_SIZE, y = (y - 1) * SCALED_CUBE_SIZE}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
+                entity:give('position', {x = (x - 1)*SCALED_CUBE_SIZE, y = (y - 1)*SCALED_CUBE_SIZE}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
                 entity:give('texture', BLOCK_TILESHEET_IMG, false, false)
                 entity:give('spritesheet', entity.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE, 1, 1, 1, ORIGINAL_CUBE_SIZE,
                     ORIGINAL_CUBE_SIZE, MapInstance:getBlockCoord(entityID))
@@ -161,7 +161,7 @@ end
 
 function MapSystem:createAboveForegroundEntity(x, y, entityID)
     local entity = Concord.entity(self.world)
-    entity:give('position', {x = (x - 1) * SCALED_CUBE_SIZE, y = (y - 1) * SCALED_CUBE_SIZE}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
+    entity:give('position', {x = (x - 1)*SCALED_CUBE_SIZE, y = (y - 1)*SCALED_CUBE_SIZE}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
     entity:give('texture', BLOCK_TILESHEET_IMG, false, false)
     entity:give('spritesheet', entity.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE, 1, 1, 1, ORIGINAL_CUBE_SIZE,
         ORIGINAL_CUBE_SIZE, MapInstance:getBlockCoord(entityID))
@@ -298,7 +298,7 @@ end
 
 function MapSystem:createCoin(x, y, entityID)
     local entity = Concord.entity(self.world)
-    entity:give('position', {x = (x - 1) * SCALED_CUBE_SIZE, y = (y - 1) * SCALED_CUBE_SIZE}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
+    entity:give('position', {x = (x - 1)*SCALED_CUBE_SIZE, y = (y - 1)*SCALED_CUBE_SIZE}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
     entity:give('texture', BLOCK_TILESHEET_IMG)
     entity:give('spritesheet', entity.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE, 1, 1, 1,
             ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE,
@@ -335,8 +335,8 @@ function MapSystem:createBulletBillCannon(x, y, entityID)
         local bulletBill = Concord.entity(self.world)
         local randomDirection = math.random(0, 1) == 1
         local intRandomDirection= randomDirection and 1 or 0  
-        bulletBill:give('position', {x = ((x - 1) + (intRandomDirection * 2 - 1)) * SCALED_CUBE_SIZE,
-                                     y = (y - 1) * SCALED_CUBE_SIZE}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
+        bulletBill:give('position', {x = ((x - 1) + (intRandomDirection * 2 - 1))*SCALED_CUBE_SIZE,
+                                     y = (y - 1)*SCALED_CUBE_SIZE}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
         bulletBill:give('texture', ENEMY_TILESHEET_IMG, randomDirection, false)
         bulletBill.texture:setHorizontalFlipped(randomDirection)
         bulletBill:give('spritesheet', bulletBill.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE, 1, 1, 0, ORIGINAL_CUBE_SIZE,
@@ -362,7 +362,7 @@ end
 
 function MapSystem:createFlagPole(x, y, entityID)
     local entity = Concord.entity(self.world)
-    entity:give('position', {x = (x - 1) * SCALED_CUBE_SIZE, y = (y - 1) * SCALED_CUBE_SIZE}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
+    entity:give('position', {x = (x - 1)*SCALED_CUBE_SIZE, y = (y - 1)*SCALED_CUBE_SIZE}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
     entity:give('texture', BLOCK_TILESHEET_IMG, false, false)   
     entity:give('spritesheet', entity.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE, 1, 1, 1, ORIGINAL_CUBE_SIZE,
                                                    ORIGINAL_CUBE_SIZE, MapInstance:getBlockCoord(entityID) )
@@ -372,7 +372,7 @@ end
 
 function MapSystem:createFlag(x, y, entityID)
     local entity = Concord.entity(self.world)
-    entity:give('position', {x = (x - 1) * SCALED_CUBE_SIZE + SCALED_CUBE_SIZE / 2, y = (y - 1) * SCALED_CUBE_SIZE}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
+    entity:give('position', {x = (x - 1)*SCALED_CUBE_SIZE + SCALED_CUBE_SIZE/2, y = (y - 1)*SCALED_CUBE_SIZE}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
     entity:give('texture', BLOCK_TILESHEET_IMG, false, false)   
     entity:give('spritesheet', entity.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE, 1, 1, 1, ORIGINAL_CUBE_SIZE,
                                                    ORIGINAL_CUBE_SIZE, MapInstance:getBlockCoord(entityID) )
@@ -417,7 +417,7 @@ end
 
 function MapSystem:createAxe(x, y, entityID)
     local entity = Concord.entity(self.world)
-    entity:give('position', {x = (x - 1) * SCALED_CUBE_SIZE, y = (y - 1) * SCALED_CUBE_SIZE}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
+    entity:give('position', {x = (x - 1)*SCALED_CUBE_SIZE, y = (y - 1)*SCALED_CUBE_SIZE}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
     entity:give('texture', BLOCK_TILESHEET_IMG, false, false)
     entity:give('spritesheet', entity.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE, 1, 1, 1, ORIGINAL_CUBE_SIZE,
                                                ORIGINAL_CUBE_SIZE, MapInstance:getBlockCoord(entityID) )
@@ -535,9 +535,9 @@ end
 
 function MapSystem:createCloudPlatform(x, y, entityID)
     local entity = Concord.entity(self.world)
-    entity:give('position', {x = (x - 1) * SCALED_CUBE_SIZE, y = (y - 1) * SCALED_CUBE_SIZE}, {x = 3 * SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
+    entity:give('position', {x = (x - 1)*SCALED_CUBE_SIZE, y = (y - 1)*SCALED_CUBE_SIZE}, {x = 3*SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
     entity:give('texture', BLOCK_TILESHEET_IMG)
-    entity:give('spritesheet', entity.texture, ORIGINAL_CUBE_SIZE * 3, ORIGINAL_CUBE_SIZE, 1,
+    entity:give('spritesheet', entity.texture, 3*ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE, 1,
                                                1, 1, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE,
                                                 MapInstance:getBlockCoord(entityID))
     entity:give('moving_component', {x = 0, y = 0}, {x = 0, y = 0})
@@ -558,7 +558,7 @@ end
 function MapSystem:createBlockEntity(coordinateX, coordinateY, entityID)
     local world = self:getWorld()
     local entity = Concord.entity(world)
-    entity:give('position', {x = (coordinateX - 1) * SCALED_CUBE_SIZE, y = (coordinateY - 1) * SCALED_CUBE_SIZE}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
+    entity:give('position', {x = (coordinateX - 1)*SCALED_CUBE_SIZE, y = (coordinateY - 1)*SCALED_CUBE_SIZE}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
     entity:give('texture', BLOCK_TILESHEET_IMG, false, false)
     entity:give('spritesheet', entity.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE, 1, 1, 1,
                                                ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE,
@@ -939,7 +939,7 @@ function MapSystem:createFireBarEntities()
 
         for bar = 0, barLength - 1 do
             local barElement = Concord.entity(world)
-            barElement:give('position', {x = barCoordinate.x * SCALED_CUBE_SIZE, y = barCoordinate.y * SCALED_CUBE_SIZE},
+            barElement:give('position', {x = barCoordinate.x*SCALED_CUBE_SIZE, y = barCoordinate.y*SCALED_CUBE_SIZE},
                                         {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE},
                                         {x = 0, y = 0, w = SCALED_CUBE_SIZE / 4, h = SCALED_CUBE_SIZE / 4})
             barElement:give('texture', BLOCK_TILESHEET_IMG)
@@ -1040,11 +1040,11 @@ end
 
 function MapSystem:createKoopa(x, y, entityID)
     local entity = Concord.entity(self.world)
-    entity:give('position', {x = (x-1) * SCALED_CUBE_SIZE, y = (y-1) * SCALED_CUBE_SIZE},
+    entity:give('position', {x = (x-1)*SCALED_CUBE_SIZE, y = (y-1)*SCALED_CUBE_SIZE},
                             {x = SCALED_CUBE_SIZE, y = 2 * SCALED_CUBE_SIZE},
                             {x = 0, y = SCALED_CUBE_SIZE, w = SCALED_CUBE_SIZE, h = SCALED_CUBE_SIZE})
     entity:give('texture', ENEMY_TILESHEET_IMG)
-    entity:give('spritesheet', entity.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE * 2, 1, 1, 0, ORIGINAL_CUBE_SIZE,
+    entity:give('spritesheet', entity.texture, ORIGINAL_CUBE_SIZE, 2*ORIGINAL_CUBE_SIZE, 1, 1, 0, ORIGINAL_CUBE_SIZE,
         ORIGINAL_CUBE_SIZE, MapInstance:getEnemyCoord(entityID) )
     
     local firstAnimationID = entityID
@@ -1077,11 +1077,11 @@ end
 
 function MapSystem:createShiftedKoopa(x, y, entityID)
     local entity = Concord.entity(self.world)
-    entity:give('position', {x = (x - 1) * SCALED_CUBE_SIZE, y = (y - 1) * SCALED_CUBE_SIZE},
-                            {x = SCALED_CUBE_SIZE, y = 2 * SCALED_CUBE_SIZE},
+    entity:give('position', {x = (x - 1)*SCALED_CUBE_SIZE, y = (y - 1)*SCALED_CUBE_SIZE},
+                            {x = SCALED_CUBE_SIZE, y = 2*SCALED_CUBE_SIZE},
                             {x = 0, y = SCALED_CUBE_SIZE, w = SCALED_CUBE_SIZE, h = SCALED_CUBE_SIZE})
     entity:give('texture', ENEMY_TILESHEET_IMG)
-    entity:give('spritesheet', entity.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE * 2, 1, 1, 0, ORIGINAL_CUBE_SIZE,
+    entity:give('spritesheet', entity.texture, ORIGINAL_CUBE_SIZE, 2*ORIGINAL_CUBE_SIZE, 1, 1, 0, ORIGINAL_CUBE_SIZE,
         ORIGINAL_CUBE_SIZE, MapInstance:getEnemyCoord(entityID) )
     
     local firstAnimationID = entityID - 1
@@ -1113,11 +1113,11 @@ end
 
 function MapSystem:createKoopaParatroopa(x, y, entityID)
     local koopa = Concord.entity(self.world)
-    koopa:give('position', {x = (x - 1) * SCALED_CUBE_SIZE, y = (y - 1) * SCALED_CUBE_SIZE},
-                           {x = SCALED_CUBE_SIZE, y = 2 * SCALED_CUBE_SIZE},
+    koopa:give('position', {x = (x - 1)*SCALED_CUBE_SIZE, y = (y - 1)*SCALED_CUBE_SIZE},
+                           {x = SCALED_CUBE_SIZE, y = 2*SCALED_CUBE_SIZE},
                            {x = 0, y = SCALED_CUBE_SIZE, w = SCALED_CUBE_SIZE, h = SCALED_CUBE_SIZE})
     koopa:give('texture', ENEMY_TILESHEET_IMG)
-    koopa:give('spritesheet', koopa.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE * 2, 1, 1,
+    koopa:give('spritesheet', koopa.texture, ORIGINAL_CUBE_SIZE, 2*ORIGINAL_CUBE_SIZE, 1, 1,
                                             0, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE,
                                             MapInstance:getEnemyCoord(entityID))
     koopa:give('animation_component', {entityID, entityID + 1}, 4, MapInstance:getEnemyIDCoordinates())
@@ -1160,12 +1160,12 @@ end
 
 function MapSystem:createPirhannaPlant(x, y, entityID)
     local pirhanna = Concord.entity(self.world)
-    pirhanna:give('position', {x = (x - 1) * SCALED_CUBE_SIZE + SCALED_CUBE_SIZE / 2, y = (y - 1) * SCALED_CUBE_SIZE},
-                              {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE * 2},
+    pirhanna:give('position', {x = (x - 1)*SCALED_CUBE_SIZE + SCALED_CUBE_SIZE/2, y = (y - 1) * SCALED_CUBE_SIZE},
+                              {x = SCALED_CUBE_SIZE, y = 2*SCALED_CUBE_SIZE},
                               {x = 24, y = 48, w = 16, h = 16})
     local position = pirhanna.position
     pirhanna:give('texture', ENEMY_TILESHEET_IMG)
-    pirhanna:give('spritesheet', pirhanna.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE * 2, 1,
+    pirhanna:give('spritesheet', pirhanna.texture, ORIGINAL_CUBE_SIZE, 2*ORIGINAL_CUBE_SIZE, 1,
                                              1, 0, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE,
                                              MapInstance:getEnemyCoord(entityID) )
     pirhanna:give('animation_component', {entityID, entityID + 1}, 4, MapInstance:getEnemyIDCoordinates())
@@ -1177,7 +1177,7 @@ function MapSystem:createPirhannaPlant(x, y, entityID)
     pirhanna:give('enemy', ENEMY_TYPE.PIRANHA_PLANT)
     pirhanna:give('piranha_plant_component')
     local piranhaComponent = pirhanna.piranha_plant_component
-    piranhaComponent.pipeCoordinates = {x = position.position.x, y = position.position.y + SCALED_CUBE_SIZE * 2}
+    piranhaComponent.pipeCoordinates = {x = position.position.x, y = position.position.y + 2*SCALED_CUBE_SIZE}
 
     pirhanna:give('timer_component', 
     function(entity)
@@ -1214,12 +1214,12 @@ end
 
 function MapSystem:createBlooper(x, y, entityID)
     local blooper = Concord.entity(self.world)
-    blooper:give('position', {x = (x - 1) * SCALED_CUBE_SIZE, y = (y - 1) * SCALED_CUBE_SIZE},
+    blooper:give('position', {x = (x - 1)*SCALED_CUBE_SIZE, y = (y - 1)*SCALED_CUBE_SIZE},
                              {x = SCALED_CUBE_SIZE, y = 2 * SCALED_CUBE_SIZE},
                              {x = 0, y = SCALED_CUBE_SIZE / 2, w = SCALED_CUBE_SIZE, h = SCALED_CUBE_SIZE})
     local position = blooper.position
     blooper:give('texture', ENEMY_TILESHEET_IMG)
-    blooper:give('spritesheet', blooper.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE * 2, 1,
+    blooper:give('spritesheet', blooper.texture, ORIGINAL_CUBE_SIZE, 2*ORIGINAL_CUBE_SIZE, 1,
                                                  1, 0, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE,
                                                  MapInstance:getEnemyCoord(entityID))
     blooper:give('animation_component', {entityID, entityID + 1}, 2, MapInstance:getEnemyIDCoordinates())
@@ -1265,10 +1265,10 @@ end
 
 function MapSystem:createLakitu(x, y, entityID)
     local lakitu = Concord.entity(self.world)
-        lakitu:give('position', {x = (x - 1) * SCALED_CUBE_SIZE, y = (y - 1) * SCALED_CUBE_SIZE},
-                                {x = SCALED_CUBE_SIZE, y = 2 * SCALED_CUBE_SIZE})
+        lakitu:give('position', {x = (x - 1)*SCALED_CUBE_SIZE, y = (y - 1)*SCALED_CUBE_SIZE},
+                                {x = SCALED_CUBE_SIZE, y = 2*SCALED_CUBE_SIZE})
         lakitu:give('texture', ENEMY_TILESHEET_IMG)
-        lakitu:give('spritesheet', lakitu.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE * 2, 1,
+        lakitu:give('spritesheet', lakitu.texture, ORIGINAL_CUBE_SIZE, 2*ORIGINAL_CUBE_SIZE, 1,
                                                    1, 0, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE,
                                                    MapInstance:getEnemyCoord(entityID))
         lakitu:give('moving_component', {x = 0, y = 0}, {x = 0, y = 0})
@@ -1367,12 +1367,12 @@ end
 
 function MapSystem:createHammerBro(x, y, entityID)
     local entity = Concord.entity(self.world)
-    entity:give('position', {x = (x - 1) * SCALED_CUBE_SIZE, y = (y - 1) * SCALED_CUBE_SIZE},
-                            {x = SCALED_CUBE_SIZE, y = 2 * SCALED_CUBE_SIZE})
+    entity:give('position', {x = (x - 1)*SCALED_CUBE_SIZE, y = (y - 1)*SCALED_CUBE_SIZE},
+                            {x = SCALED_CUBE_SIZE, y = 2*SCALED_CUBE_SIZE})
     local position = entity.position
     entity:give('texture', ENEMY_TILESHEET_IMG)
     local texture = entity.texture
-    entity:give('spritesheet', texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE * 2, 1,
+    entity:give('spritesheet', texture, ORIGINAL_CUBE_SIZE, 2*ORIGINAL_CUBE_SIZE, 1,
                                         1, 0, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE,
                                         MapInstance:getEnemyCoord(entityID))
     entity:give('moving_component', {x = 2, y = 0}, {x = 0, y = 0})
@@ -1450,8 +1450,8 @@ end
 
 function MapSystem:createBowser(x, y, entityID)
     local bowser = Concord.entity(self.world)
-    bowser:give('position', {x = (x - 1) * SCALED_CUBE_SIZE, y = (y - 1) * SCALED_CUBE_SIZE },
-                            {x = 2 * SCALED_CUBE_SIZE, y = 2 * SCALED_CUBE_SIZE })
+    bowser:give('position', {x = (x - 1)*SCALED_CUBE_SIZE, y = (y - 1)*SCALED_CUBE_SIZE },
+                            {x = 2*SCALED_CUBE_SIZE, y = 2*SCALED_CUBE_SIZE })
     local position = bowser.position
     bowser:give('texture', ENEMY_TILESHEET_IMG)
     local texture = bowser.texture
@@ -1512,11 +1512,11 @@ function MapSystem:createBowser(x, y, entityID)
 
                 local fireBlast = Concord.entity(self.world)
                 fireBlast:give('position', {x = 0, y = position:getTop() + 4},
-                                           {x = 1.5 * SCALED_CUBE_SIZE, y = 0.5 * SCALED_CUBE_SIZE })
+                                           {x = 1.5*SCALED_CUBE_SIZE, y = 0.5*SCALED_CUBE_SIZE })
                 local blastPosition = fireBlast.position
                 fireBlast:give('texture', ENEMY_TILESHEET_IMG)
                 local blastTexture = fireBlast.texture
-                fireBlast:give('spritesheet', blastTexture, ORIGINAL_CUBE_SIZE + ORIGINAL_CUBE_SIZE / 2, ORIGINAL_CUBE_SIZE / 2, 1,
+                fireBlast:give('spritesheet', blastTexture, ORIGINAL_CUBE_SIZE + ORIGINAL_CUBE_SIZE/2, ORIGINAL_CUBE_SIZE/2, 1,
                                                             1, 0, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE,
                                                             MapInstance:getEnemyCoord(470))
                 fireBlast:give('animation_component', {470, 505}, 16, MapInstance:getEnemyIDCoordinates())
@@ -1586,7 +1586,7 @@ end
 
 function MapSystem:createGoomba(x, y, entityID)
     local entity = Concord.entity(self.world)
-    entity:give('position', {x = (x - 1) * SCALED_CUBE_SIZE, y = (y - 1) * SCALED_CUBE_SIZE}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
+    entity:give('position', {x = (x - 1)*SCALED_CUBE_SIZE, y = (y - 1)*SCALED_CUBE_SIZE}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
     entity:give('texture', ENEMY_TILESHEET_IMG)
     entity:give('spritesheet', entity.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE, 1, 1, 0, ORIGINAL_CUBE_SIZE,
                                        ORIGINAL_CUBE_SIZE, MapInstance:getEnemyCoord(entityID) )
@@ -1613,7 +1613,7 @@ end
 
 function MapSystem:createShiftedGoomba(x, y, entityID)
     local entity = Concord.entity(self.world)
-        entity:give('position', {x = (x - 1) * SCALED_CUBE_SIZE, y = (y - 1) * SCALED_CUBE_SIZE}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
+        entity:give('position', {x = (x - 1)*SCALED_CUBE_SIZE, y = (y - 1)*SCALED_CUBE_SIZE}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
         entity:give('texture', ENEMY_TILESHEET_IMG)
         entity:give('spritesheet', entity.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE, 1, 1, 0, ORIGINAL_CUBE_SIZE,
                                            ORIGINAL_CUBE_SIZE, MapInstance:getEnemyCoord(entityID) )
@@ -1639,7 +1639,7 @@ end
 
 function MapSystem:createCheepCheep(x, y, entityID)
     local entity = Concord.entity(self.world)
-    entity:give('position', {x = (x - 1) * SCALED_CUBE_SIZE, y = (y - 1) * SCALED_CUBE_SIZE}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
+    entity:give('position', {x = (x - 1)*SCALED_CUBE_SIZE, y = (y - 1)*SCALED_CUBE_SIZE}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
     entity:give('texture', ENEMY_TILESHEET_IMG)
     entity:give('spritesheet', entity.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE, 1, 1, 0,
                                                ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE,
@@ -1653,7 +1653,7 @@ end
 
 function MapSystem:createBuzzyBeetle(x, y, entityID)
     local entity = Concord.entity(self.world)
-    entity:give('position', {x = (x - 1) * SCALED_CUBE_SIZE, y = (y - 1) * SCALED_CUBE_SIZE},
+    entity:give('position', {x = (x - 1)*SCALED_CUBE_SIZE, y = (y - 1)*SCALED_CUBE_SIZE},
                             {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
 
     entity:give('texture', ENEMY_TILESHEET_IMG)
@@ -1683,7 +1683,7 @@ function MapSystem:createRedCheepCheep(x, y, entityID)
     if self.scene:getBackgroundMap():getLevelData()[y][x] == 186 then -- if underwater
         local entity = Concord.entity(self.world)
         entity:give('texture', ENEMY_TILESHEET_IMG)
-        entity:give('position', {x = (x - 1) * SCALED_CUBE_SIZE, y = (y - 1) * SCALED_CUBE_SIZE}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
+        entity:give('position', {x = (x - 1)*SCALED_CUBE_SIZE, y = (y - 1)*SCALED_CUBE_SIZE}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
         entity:give('spritesheet', entity.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE, 1, 1,
                                                    0, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE,
                                                    MapInstance:getEnemyCoord(entityID))
@@ -1695,7 +1695,7 @@ function MapSystem:createRedCheepCheep(x, y, entityID)
     else -- If in those flying patches of them idk what they're called
         
         local entity = Concord.entity(self.world)
-        entity:give('position', {x = (x - 1) * SCALED_CUBE_SIZE, y = y * SCALED_CUBE_SIZE}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
+        entity:give('position', {x = (x - 1)*SCALED_CUBE_SIZE, y = y*SCALED_CUBE_SIZE}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
         local position = entity.position
         entity:give('texture', ENEMY_TILESHEET_IMG, true)
         entity.texture:setHorizontalFlipped(true)
@@ -1744,9 +1744,9 @@ end
 
 function MapSystem:createLavaBubble(x, y, entityID)
     local entity = Concord.entity(self.world)
-    entity:give('position', {x = (x - 1) * SCALED_CUBE_SIZE, y = y * SCALED_CUBE_SIZE},
+    entity:give('position', {x = (x - 1)*SCALED_CUBE_SIZE, y = y*SCALED_CUBE_SIZE},
                             {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
-    local resetYLevel = y * SCALED_CUBE_SIZE
+    local resetYLevel = y*SCALED_CUBE_SIZE
     entity:give('texture', ENEMY_TILESHEET_IMG)
     entity:give('spritesheet', entity.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE, 1, 1, 0,
                                                ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE,
@@ -1788,7 +1788,7 @@ end
 function MapSystem:createPlatformEntity(coordinateX, coordinateY, entityID, platformLength, platformData)
     local world = self:getWorld()
     local platform = Concord.entity(world)
-    platform:give('position', {x = (coordinateX - 1) * SCALED_CUBE_SIZE, y = (coordinateY - 1) * SCALED_CUBE_SIZE}, {x = platformLength * SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
+    platform:give('position', {x = (coordinateX - 1)*SCALED_CUBE_SIZE, y = (coordinateY - 1)*SCALED_CUBE_SIZE}, {x = platformLength*SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
     platform:give('texture', BLOCK_TILESHEET_IMG)
     platform:give('spritesheet', platform.texture, ORIGINAL_CUBE_SIZE * platformLength, ORIGINAL_CUBE_SIZE, 1, 1, 1, ORIGINAL_CUBE_SIZE,
                                                    ORIGINAL_CUBE_SIZE, MapInstance:getBlockCoord(entityID))
@@ -1797,7 +1797,7 @@ function MapSystem:createPlatformEntity(coordinateX, coordinateY, entityID, plat
 
     -- {"coords": [140, 24], "motion": "ONE_DIRECTION_REPEATED", "direction": "DOWN", "point": [17, 32], "shift": false},
     if platformData.shift then
-        platform.position.position.x = platform.position.position.x + SCALED_CUBE_SIZE / 2
+        platform.position.position.x = platform.position.position.x + SCALED_CUBE_SIZE/2
     end
 
     platform:give('friction_exempt_component')
@@ -1880,24 +1880,24 @@ function MapSystem:createPlatformLevelEntity(platformLevelData)
     local leftPlatform = Concord.entity(world)
     local rightPlatform = Concord.entity(world)
 
-    leftPlatform:give('position', {x = leftCoordinate[1] * SCALED_CUBE_SIZE, y = leftCoordinate[2] * SCALED_CUBE_SIZE}, 
-                                  {x = 3 * SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE},
-                                  {x = 0, y = 0, w = 3 * SCALED_CUBE_SIZE, h = SCALED_CUBE_SIZE / 2})
+    leftPlatform:give('position', {x = leftCoordinate[1]*SCALED_CUBE_SIZE, y = leftCoordinate[2]*SCALED_CUBE_SIZE}, 
+                                  {x = 3*SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE},
+                                  {x = 0, y = 0, w = 3*SCALED_CUBE_SIZE, h = SCALED_CUBE_SIZE/2})
     
     leftPlatform:give('texture', BLOCK_TILESHEET_IMG)
-    leftPlatform:give('spritesheet', leftPlatform.texture, ORIGINAL_CUBE_SIZE * 3, ORIGINAL_CUBE_SIZE, 1,
+    leftPlatform:give('spritesheet', leftPlatform.texture, 3*ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE, 1,
                                                            1, 1, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE,
                                                            MapInstance:getBlockCoord(809) )
     leftPlatform:give('moving_component', {x = 0, y = 0}, {x = 0, y = 0})
-    leftPlatform:give('platform_level_component', rightPlatform, leftPulleyLine, pulleyHeight * SCALED_CUBE_SIZE)
+    leftPlatform:give('platform_level_component', rightPlatform, leftPulleyLine, pulleyHeight*SCALED_CUBE_SIZE)
     leftPlatform:give('foreground')
     leftPlatform:give('tile_component')
 
-    rightPlatform:give('position', {x = rightCoordinate[1] * SCALED_CUBE_SIZE, y = rightCoordinate[2] * SCALED_CUBE_SIZE}, 
-                                   {x = 3 * SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE},
-                                   {x = 0, y = 0, w = 3 * SCALED_CUBE_SIZE, h = SCALED_CUBE_SIZE / 2})
+    rightPlatform:give('position', {x = rightCoordinate[1]*SCALED_CUBE_SIZE, y = rightCoordinate[2]*SCALED_CUBE_SIZE}, 
+                                   {x = 3*SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE},
+                                   {x = 0, y = 0, w = 3*SCALED_CUBE_SIZE, h = SCALED_CUBE_SIZE/2})
     rightPlatform:give('texture', BLOCK_TILESHEET_IMG)
-    rightPlatform:give('spritesheet', rightPlatform.texture, ORIGINAL_CUBE_SIZE * 3, ORIGINAL_CUBE_SIZE, 1,
+    rightPlatform:give('spritesheet', rightPlatform.texture, 3*ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE, 1,
                                                             1, 1, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE,
                                                             MapInstance:getBlockCoord(809) )
     rightPlatform:give('moving_component', {x = 0, y = 0}, {x = 0, y = 0})
@@ -1912,7 +1912,7 @@ end
 function MapSystem:createBackgroundEntity(coordinateX, coordinateY, entityID) 
     local world = self:getWorld()
     local entity = Concord.entity(world)
-    entity:give('position', {x = (coordinateX-1) * SCALED_CUBE_SIZE, y = (coordinateY-1) * SCALED_CUBE_SIZE},
+    entity:give('position', {x = (coordinateX - 1)*SCALED_CUBE_SIZE, y = (coordinateY - 1)*SCALED_CUBE_SIZE},
                             {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
     entity:give('texture', BLOCK_TILESHEET_IMG, false, false)
     entity:give('spritesheet', entity.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE, 1, 1, 1,
