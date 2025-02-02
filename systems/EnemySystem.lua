@@ -1,5 +1,162 @@
 EnemySystem = Concord.system({ pool = {'enemy'}})
 
+function EnemySystem:update()
+    if not self:isEnabled() then
+        return
+    end
+
+    local world = self:getWorld()
+    local projectiles = world:getSystem(ProjectileSystem):getEntities()
+    for _, entity in ipairs(projectiles) do
+        if entity:has('position') and entity:has('moving_component') then
+            if entity.projectile.type == PROJECTTILE_TYPE.FIREBALL then
+                if entity:has('bottom_collision_component') then
+                    entity.moving_component.velocity.y = -PROJECTILE_BOUNCE
+                    entity:remove('bottom_collision_component')
+                end
+            end
+        end
+    end
+
+    -- Main enemy update loop
+    local enemies = world:getSystem(EnemySystem):getEntities()
+    for _, enemy in ipairs(enemies) do
+        if enemy:has('position') then
+            local position = enemy.position
+            local move = enemy.moving_component
+            local enemyComponent = enemy.enemy
+
+            local enemyType = enemyComponent.type
+            if enemyType == ENEMY_TYPE.BOWSER then
+                self:performBowserActions(enemy)
+
+            elseif enemyType == ENEMY_TYPE.HAMMER_BRO then
+                self:performHammerBroActions(world, enemy)
+
+            elseif enemyType == ENEMY_TYPE.LAKITU then
+                self:performLakituActions(world, enemy)
+
+            elseif enemyType == ENEMY_TYPE.SPINE then
+                -- Turn spine eggs into spiny shells when they hit the ground
+                local animation = enemy.animation_component
+                local firstAnimationID = 502
+                if enemy:has('bottom_collision_component') and animation.frameIDs[1] ~= 502 then
+                    animation.frameIDs = {502, 503}
+                    animation.currentFrame = 0
+                    animation.frameTimer = 0
+                    animation:setFramesPerSecond(5)
+                end
+
+            elseif enemyType == ENEMY_TYPE.LAVA_BUBBLE then
+                local texture = enemy.texture
+                -- If going up and upside down
+                if move.velocity.y <= 0 and texture:isVerticalFlipped() then
+                    texture:setVerticalFlipped(false)
+                elseif move.velocity.y > 0 and not texture:isVerticalFlipped() then
+                    -- If going down and not upside down
+                    texture:setVerticalFlipped(true);
+                end
+            end
+
+            -- If the enemy is standing on a block and the block gets hit
+            if enemy:has('bottom_collision_component') then
+                processEntitiesWithComponents(world, {'block_bump_component'},
+                function(block) 
+                    if AABBCollision(enemy.position, block.position) then
+                        enemy:give('enemy_destroyed_component')
+                    end
+                end)
+            end
+
+            -- Enemy + Projectile collisions
+            local projectiles = world:getSystem(ProjectileSystem):getEntities()
+            for _, projectile in ipairs(projectiles) do
+                if projectile:has('moving_component') then
+                    local projectilePosition = projectile.position
+                    if not AABBCollision(position, projectilePosition) or enemy:has('projectile') or enemy:has('particle') or
+                        enemyType == ENEMY_TYPE.LAVA_BUBBLE or enemyType == ENEMY_TYPE.FIRE_BAR or enemyType == ENEMY_TYPE.BULLET_BILL then
+                    elseif enemy:has('bowser_component') then
+                        if projectile.projectile.type == PROJECTTILE_TYPE.FIREBALL then
+                            --TO DO 
+                            -- Decrease HP
+                        end
+                    else
+                        enemy:give('enemy_destroyed_component')
+                        world:removeEntity(projectile)
+                    end
+                end
+            end
+
+            -- Enemy + Enemy Collision (prevents to enemies from walking through each other)
+            local others = world:getSystem(EnemySystem):getEntities()
+            for _, other in ipairs(others) do
+                local otherPosition = other.position
+                if not AABBCollision(position, otherPosition) or enemy == other or enemy:has('dead_component') or enemy:has('piranha_plant_component')
+                    or other:has('particle') or enemyType == ENEMY_TYPE.SPINE or enemyType == ENEMY_TYPE.BULLET_BILL then
+                --pass
+                elseif other.enemy.type == ENEMY_TYPE.KOOPA_SHELL and other.moving_component.velocity.x ~= 0 then
+                    enemy:give('enemy_destroyed_component'):give('move_outside_camera_component')
+
+                    local addScore = Concord.entity(world)
+                    addScore:give('add_score_component', 100)
+                else
+                -- If the other enemy is to the left
+                    if otherPosition:getLeft() < position:getLeft() and otherPosition:getRight() < position:getRight() then
+                        other:give('right_collision_component')
+                    end
+
+                -- If the other enemy is to the right
+                    if otherPosition:getLeft() > position:getLeft() and otherPosition:getRight() > position:getRight() then
+                        other:give('left_collision_component')
+                    end
+                end
+            end
+
+            -- Moves Koopas in the opposite direction if not on the ground
+            if CameraInstance:inCameraRange(position) and enemyType == ENEMY_TYPE.KOOPA then
+                if not (enemy:has('bottom_collision_component') or enemy:has('dead_component')) and math.abs(move.velocity.y) < 1 then
+                    move.velocity.x = move.velocity.x * -1
+                    local horizontalFlipped = enemy.texture:isHorizontalFlipped()
+                    enemy.texture:setHorizontalFlipped(not horizontalFlipped)
+                end
+            end
+
+            if enemyType ~= ENEMY_TYPE.PIRANHA_PLANT and enemyType ~= ENEMY_TYPE.CHEEP_CHEEP and 
+                enemyType ~= ENEMY_TYPE.BLOOPER and enemyType ~= ENEMY_TYPE.LAKITU and
+                enemyType ~= ENEMY_TYPE.LAVA_BUBBLE and enemyType ~= ENEMY_TYPE.BULLET_BILL then
+                    -- Reverses the direction of the enemy when it hits a wall or another enemy
+                    if enemy:has('left_collision_component') then
+                        if enemyType == ENEMY_TYPE.KOOPA_SHELL then
+                            move.velocity.x = 6.0
+                        else
+                            move.velocity.x = ENEMY_SPEED
+                        end
+
+                        enemy.texture:setHorizontalFlipped(true)
+                        enemy:remove('left_collision_component')
+                    elseif enemy:has('right_collision_component') then
+                        if enemyType == ENEMY_TYPE.KOOPA_SHELL then
+                            move.velocity.x = -6.0
+                        else
+                            move.velocity.x = -ENEMY_SPEED
+                        end
+
+                        enemy.texture:setHorizontalFlipped(false)
+                        enemy:remove('right_collision_component')
+                    end
+            end
+
+            self:checkEnemyDestroyed(enemy)
+
+            if enemyType ~= ENEMY_TYPE.KOOPA_PARATROOPA then 
+                enemy:remove('bottom_collision_component')
+            end
+
+            enemy:remove('top_collision_component'):remove('left_collision_component'):remove('right_collision_component')
+        end
+    end
+end
+
 function EnemySystem:performBowserActions(entity)
     local world = self:getWorld()
     if not CameraInstance:inCameraRange(entity.position) or entity:has('frozen_component') or entity:has('dead_component') then
@@ -242,163 +399,6 @@ function EnemySystem:checkEnemyDestroyed(world, enemy)
 
         local floatingText = Concord.entity(world)
         floating_text:give('create_floating_text_component', enemy, '100')
-    end
-end
-
-function EnemySystem:update()
-    if not self:isEnabled() then
-        return
-    end
-
-    local world = self:getWorld()
-    local projectiles = world:getSystem(ProjectileSystem):getEntities()
-    for _, entity in ipairs(projectiles) do
-        if entity:has('position') and entity:has('moving_component') then
-            if entity.projectile.type == PROJECTTILE_TYPE.FIREBALL then
-                if entity:has('bottom_collision_component') then
-                    entity.moving_component.velocity.y = -PROJECTILE_BOUNCE
-                    entity:remove('bottom_collision_component')
-                end
-            end
-        end
-    end
-
-    -- Main enemy update loop
-    local enemies = world:getSystem(EnemySystem):getEntities()
-    for _, enemy in ipairs(enemies) do
-        if enemy:has('position') then
-            local position = enemy.position
-            local move = enemy.moving_component
-            local enemyComponent = enemy.enemy
-
-            local enemyType = enemyComponent.type
-            if enemyType == ENEMY_TYPE.BOWSER then
-                self:performBowserActions(enemy)
-
-            elseif enemyType == ENEMY_TYPE.HAMMER_BRO then
-                self:performHammerBroActions(world, enemy)
-
-            elseif enemyType == ENEMY_TYPE.LAKITU then
-                self:performLakituActions(world, enemy)
-
-            elseif enemyType == ENEMY_TYPE.SPINE then
-                -- Turn spine eggs into spiny shells when they hit the ground
-                local animation = enemy.animation_component
-                local firstAnimationID = 502
-                if enemy:has('bottom_collision_component') and animation.frameIDs[1] ~= 502 then
-                    animation.frameIDs = {502, 503}
-                    animation.currentFrame = 0
-                    animation.frameTimer = 0
-                    animation:setFramesPerSecond(5)
-                end
-
-            elseif enemyType == ENEMY_TYPE.LAVA_BUBBLE then
-                local texture = enemy.texture
-                -- If going up and upside down
-                if move.velocity.y <= 0 and texture:isVerticalFlipped() then
-                    texture:setVerticalFlipped(false)
-                elseif move.velocity.y > 0 and not texture:isVerticalFlipped() then
-                    -- If going down and not upside down
-                    texture:setVerticalFlipped(true);
-                end
-            end
-
-            -- If the enemy is standing on a block and the block gets hit
-            if enemy:has('bottom_collision_component') then
-                processEntitiesWithComponents(world, {'block_bump_component'},
-                function(block) 
-                    if AABBCollision(enemy.position, block.position) then
-                        enemy:give('enemy_destroyed_component')
-                    end
-                end)
-            end
-
-            -- Enemy + Projectile collisions
-            local projectiles = world:getSystem(ProjectileSystem):getEntities()
-            for _, projectile in ipairs(projectiles) do
-                if projectile:has('moving_component') then
-                    local projectilePosition = projectile.position
-                    if not AABBCollision(position, projectilePosition) or enemy:has('projectile') or enemy:has('particle') or
-                        enemyType == ENEMY_TYPE.LAVA_BUBBLE or enemyType == ENEMY_TYPE.FIRE_BAR or enemyType == ENEMY_TYPE.BULLET_BILL then
-                    elseif enemy:has('bowser_component') then
-                        if projectile.projectile.type == PROJECTTILE_TYPE.FIREBALL then
-                            --TO DO 
-                            -- Decrease HP
-                        end
-                    else
-                        enemy:give('enemy_destroyed_component')
-                        world:removeEntity(projectile)
-                    end
-                end
-            end
-
-            -- Enemy + Enemy Collision (prevents to enemies from walking through each other)
-            local others = world:getSystem(EnemySystem):getEntities()
-            for _, other in ipairs(others) do
-                local otherPosition = other.position
-                if not AABBCollision(position, otherPosition) or enemy == other or enemy:has('dead_component') or enemy:has('piranha_plant_component')
-                    or other:has('particle') or enemyType == ENEMY_TYPE.SPINE or enemyType == ENEMY_TYPE.BULLET_BILL then
-                --pass
-                elseif other.enemy.type == ENEMY_TYPE.KOOPA_SHELL and other.moving_component.velocity.x ~= 0 then
-                    enemy:give('enemy_destroyed_component'):give('move_outside_camera_component')
-
-                    local addScore = Concord.entity(world)
-                    addScore:give('add_score_component', 100)
-                else
-                -- If the other enemy is to the left
-                    if otherPosition:getLeft() < position:getLeft() and otherPosition:getRight() < position:getRight() then
-                        other:give('right_collision_component')
-                    end
-
-                -- If the other enemy is to the right
-                    if otherPosition:getLeft() > position:getLeft() and otherPosition:getRight() > position:getRight() then
-                        other:give('left_collision_component')
-                    end
-                end
-            end
-
-            -- Moves Koopas in the opposite direction if not on the ground
-            if CameraInstance:inCameraRange(position) and enemyType == ENEMY_TYPE.KOOPA then
-                if not (enemy:has('bottom_collision_component') or enemy:has('dead_component')) and math.abs(move.velocity.y) < 1 then
-                    move.velocity.x = move.velocity.x * -1
-                    local horizontalFlipped = enemy.texture:isHorizontalFlipped()
-                    enemy.texture:setHorizontalFlipped(not horizontalFlipped)
-                end
-            end
-
-            if enemyType ~= ENEMY_TYPE.PIRANHA_PLANT and enemyType ~= ENEMY_TYPE.CHEEP_CHEEP and 
-                enemyType ~= ENEMY_TYPE.BLOOPER and enemyType ~= ENEMY_TYPE.LAKITU and
-                enemyType ~= ENEMY_TYPE.LAVA_BUBBLE and enemyType ~= ENEMY_TYPE.BULLET_BILL then
-                    -- Reverses the direction of the enemy when it hits a wall or another enemy
-                    if enemy:has('left_collision_component') then
-                        if enemyType == ENEMY_TYPE.KOOPA_SHELL then
-                            move.velocity.x = 6.0
-                        else
-                            move.velocity.x = ENEMY_SPEED
-                        end
-
-                        enemy.texture:setHorizontalFlipped(true)
-                        enemy:remove('left_collision_component')
-                    elseif enemy:has('right_collision_component') then
-                        if enemyType == ENEMY_TYPE.KOOPA_SHELL then
-                            move.velocity.x = -6.0
-                        else
-                            move.velocity.x = -ENEMY_SPEED
-                        end
-
-                        enemy.texture:setHorizontalFlipped(false)
-                        enemy:remove('right_collision_component')
-                    end
-            end
-
-            self:checkEnemyDestroyed(enemy)
-
-            if enemyType ~= ENEMY_TYPE.KOOPA_PARATROOPA then 
-                enemy:remove('bottom_collision_component')
-            end
-
-            enemy:remove('top_collision_component'):remove('left_collision_component'):remove('right_collision_component')
-        end
     end
 end
 

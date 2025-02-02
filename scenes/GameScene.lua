@@ -424,6 +424,7 @@ function GameScene:setupLevel()
 
     self.world:getSystem(MapSystem):setScene(self)
     self.world:getSystem(MapSystem):loadEntities()
+    self:setMaxCameraXFromLevelData()
 
     local newMarioState = nil
     if self.world:getSystem(PlayerSystem) then
@@ -520,4 +521,8 @@ end
 function GameScene:goToMenuScene()
     self:destroyWorldEntities()
     gotoScene('MenuScene')
+end
+
+function GameScene:setMaxCameraXFromLevelData()
+    CameraInstance:setCameraMaxX(self:getLevelData():getCameraMax() * SCALED_CUBE_SIZE)
 end

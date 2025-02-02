@@ -91,150 +91,6 @@ end
 function PhysicsSystem:init(world) --onAddedToWorld(world))
 end
 
-function PhysicsSystem:updateFireBars() 
-    local world = self:getWorld()
-    processEntitiesWithComponents(world, {'fire_bar_component', 'position'},
-    function(entity)
-        local fireBar = entity.fire_bar_component
-        local position = entity.position
-
-        if fireBar.barAngle > 360 then
-            fireBar.barAngle = fireBar.barAngle - 360
-        elseif fireBar.barAngle < 0 then
-            fireBar.barAngle = fireBar.barAngle + 360
-        end
-
-        position.position.x = fireBar:calculateXPosition(fireBar.barAngle) + fireBar.pointOfRotation.x 
-        position.position.y = -fireBar:calculateYPosition(fireBar.barAngle) + fireBar.pointOfRotation.y
-    end)
-end
- 
-function PhysicsSystem:updateMovingPlatforms() 
-    local world = self:getWorld()
-    processEntitiesWithComponents(world, {'moving_platform_component', 'moving_component', 'position'},
-    function(entity)
-        local platform = entity.moving_platform_component
-        local platformMove = entity.moving_component
-        local position = entity.position
-        local motionType = platform.motionType
-        local ySpeedFactor = 2.8 -- It was 3.8
-        if motionType == PLATFORM_MOTION_TYPE.ONE_DIRECTION_REPEATED then
-            if platform.movingDirection == DIRECTION.LEFT or platform.movingDirection == DIRECTION.RIGHT then
-                if position.position.x < platform.minPoint then
-                    position.position.x = platform.maxPoint
-                elseif position.position.x > platform.maxPoint then
-                    position.position.x = platform.minPoint
-                end
-            elseif platform.movingDirection == DIRECTION.UP or platform.movingDirection == DIRECTION.DOWN then
-                if position.position.y < platform.minPoint then
-                    position.position.y = platform.maxPoint
-                elseif position.position.y > platform.maxPoint then
-                    position.position.y = platform.minPoint
-                end
-            end
-        elseif motionType == PLATFORM_MOTION_TYPE.BACK_AND_FORTH then
-            if platform.movingDirection == DIRECTION.LEFT then
-                if position:getLeft() <= platform.minPoint then
-                    platform.movingDirection = DIRECTION.RIGHT
-                else
-                    local newVelocity = -platform:calculateVelocity(position:getRight() - platform.minPoint, (platform.maxPoint - platform.minPoint) / ySpeedFactor)
-                    platformMove.velocity.x = newVelocity
-                end
-            elseif platform.movingDirection == DIRECTION.RIGHT then
-                if position:getRight() >= platform.maxPoint then
-                    platform.movingDirection = DIRECTION.LEFT
-                else
-                    local newVelocity = platform:calculateVelocity(platform.maxPoint - position:getLeft(), (platform.maxPoint - platform.minPoint) / ySpeedFactor)
-                    platformMove.velocity.x = newVelocity
-                end
-            elseif platform.movingDirection == DIRECTION.UP then
-                if position:getTop() <= platform.minPoint then
-                    platform.movingDirection = DIRECTION.DOWN
-                else
-                    local newVelocity = -platform:calculateVelocity(position:getBottom() - platform.minPoint, (platform.maxPoint - platform.minPoint) / ySpeedFactor)
-                    platformMove.velocity.y = newVelocity
-                end
-            elseif platform.movingDirection == DIRECTION.DOWN then
-                if position:getBottom() >= platform.maxPoint then
-                    platform.movingDirection = DIRECTION.UP
-                else
-                    local newVelocity = platform:calculateVelocity(platform.maxPoint - position:getTop(), (platform.maxPoint - platform.minPoint) / ySpeedFactor)
-                    platformMove.velocity.y = 1--newVelocity
-                end
-            end
-        elseif motionType == PLATFORM_MOTION_TYPE.GRAVITY then
-            if entity:has('top_collision_component') then
-                --platformMove.acceleration.y = 0.1
-                platformMove.velocity.y = 1
-            else
-                platformMove.acceleration.y = 0
-                platformMove.velocity.y = platformMove.velocity.y * 0.92
-            end
-
-            entity:remove('top_collision_component')
-        end
-    end)
-end
- 
-function PhysicsSystem:updatePlatformLevels() 
---To Do
-    local world = self:getWorld()
-    processEntitiesWithComponents(world, {'platform_level_component'},
-    function(entity)
-        local platformLevel = entity.platform_level_component
-        local platformPosition = entity.position
-        local platformMove = entity.moving_component
-
-        if not CameraInstance:inCameraRange(platformPosition) then
-            return
-        end
-
-        local linePosition = platformLevel.pulleyLine.position
-        linePosition.scale.y = platformPosition:getTop() - linePosition:getTop()
-        local otherPlatform = platformLevel:getOtherPlatform()
-
-        -- If the level reaches max height
-        if platformPosition:getTop() < platformLevel.pulleyHeight then
-            platformPosition:setTop(platformLevel.pulleyHeight)
-            platformMove.velocity.x = 0
-            platformMove.velocity.y = 0
-
-            otherPlatform.moving_component.acceleration.y = 0
-            otherPlatform:give('gravity_component')
-            otherPlatform:give('collision_exempt_component')
-            otherPlatform:give('destroy_outside_camera_component')
-
-            otherPlatform:remove('platform_level_component')
-            entity:remove('platform_level_component')
-            return
-        end
-
-        if not entity:has('top_collision_component') then
-            --Slows the platform down if the other platform isn't accelerating
-            if otherPlatform.moving_component.acceleration.y == 0 then
-                platformMove.velocity.y = platformMove.velocity.y * 0.92
-                -- Sets the 2 platforms to have opposite velocities
-                otherPlatform.moving_component.velocity.y = -platformMove.velocity.y
-            end
-
-            platformMove.acceleration.y = 0
-            return
-        end
-
-        platformMove.acceleration.y = 0.12
-        -- Sets the 2 platforms to have opposite velocities
-        otherPlatform.moving_component.velocity.y = -platformMove.velocity.y
-        -- NEW CODE
-        if platformMove.velocity.y > 1 then
-            platformMove.velocity.y = 1
-        elseif platformMove.velocity.y < -1 then
-            platformMove.velocity.y = -1
-        end
-        --END NEW CODE
-        entity:remove('top_collision_component')
-    end)
-end
-
 function PhysicsSystem:update()
     if not self:isEnabled() then
         return
@@ -365,4 +221,147 @@ function PhysicsSystem:update()
  
     -- Update the velocities for the platform levels
     self:updatePlatformLevels()
+end
+
+function PhysicsSystem:updateFireBars() 
+    local world = self:getWorld()
+    processEntitiesWithComponents(world, {'fire_bar_component', 'position'},
+    function(entity)
+        local fireBar = entity.fire_bar_component
+        local position = entity.position
+
+        if fireBar.barAngle > 360 then
+            fireBar.barAngle = fireBar.barAngle - 360
+        elseif fireBar.barAngle < 0 then
+            fireBar.barAngle = fireBar.barAngle + 360
+        end
+
+        position.position.x = fireBar:calculateXPosition(fireBar.barAngle) + fireBar.pointOfRotation.x 
+        position.position.y = -fireBar:calculateYPosition(fireBar.barAngle) + fireBar.pointOfRotation.y
+    end)
+end
+ 
+function PhysicsSystem:updateMovingPlatforms() 
+    local world = self:getWorld()
+    processEntitiesWithComponents(world, {'moving_platform_component', 'moving_component', 'position'},
+    function(entity)
+        local platform = entity.moving_platform_component
+        local platformMove = entity.moving_component
+        local position = entity.position
+        local motionType = platform.motionType
+        local ySpeedFactor = 2.8 -- It was 3.8
+        if motionType == PLATFORM_MOTION_TYPE.ONE_DIRECTION_REPEATED then
+            if platform.movingDirection == DIRECTION.LEFT or platform.movingDirection == DIRECTION.RIGHT then
+                if position.position.x < platform.minPoint then
+                    position.position.x = platform.maxPoint
+                elseif position.position.x > platform.maxPoint then
+                    position.position.x = platform.minPoint
+                end
+            elseif platform.movingDirection == DIRECTION.UP or platform.movingDirection == DIRECTION.DOWN then
+                if position.position.y < platform.minPoint then
+                    position.position.y = platform.maxPoint
+                elseif position.position.y > platform.maxPoint then
+                    position.position.y = platform.minPoint
+                end
+            end
+        elseif motionType == PLATFORM_MOTION_TYPE.BACK_AND_FORTH then
+            if platform.movingDirection == DIRECTION.LEFT then
+                if position:getLeft() <= platform.minPoint then
+                    platform.movingDirection = DIRECTION.RIGHT
+                else
+                    local newVelocity = -platform:calculateVelocity(position:getRight() - platform.minPoint, (platform.maxPoint - platform.minPoint) / ySpeedFactor)
+                    platformMove.velocity.x = newVelocity
+                end
+            elseif platform.movingDirection == DIRECTION.RIGHT then
+                if position:getRight() >= platform.maxPoint then
+                    platform.movingDirection = DIRECTION.LEFT
+                else
+                    local newVelocity = platform:calculateVelocity(platform.maxPoint - position:getLeft(), (platform.maxPoint - platform.minPoint) / ySpeedFactor)
+                    platformMove.velocity.x = newVelocity
+                end
+            elseif platform.movingDirection == DIRECTION.UP then
+                if position:getTop() <= platform.minPoint then
+                    platform.movingDirection = DIRECTION.DOWN
+                else
+                    local newVelocity = -platform:calculateVelocity(position:getBottom() - platform.minPoint, (platform.maxPoint - platform.minPoint) / ySpeedFactor)
+                    platformMove.velocity.y = newVelocity
+                end
+            elseif platform.movingDirection == DIRECTION.DOWN then
+                if position:getBottom() >= platform.maxPoint then
+                    platform.movingDirection = DIRECTION.UP
+                else
+                    local newVelocity = platform:calculateVelocity(platform.maxPoint - position:getTop(), (platform.maxPoint - platform.minPoint) / ySpeedFactor)
+                    platformMove.velocity.y = 1--newVelocity
+                end
+            end
+        elseif motionType == PLATFORM_MOTION_TYPE.GRAVITY then
+            if entity:has('top_collision_component') then
+                --platformMove.acceleration.y = 0.1
+                platformMove.velocity.y = 1
+            else
+                platformMove.acceleration.y = 0
+                platformMove.velocity.y = platformMove.velocity.y * 0.92
+            end
+
+            entity:remove('top_collision_component')
+        end
+    end)
+end
+ 
+function PhysicsSystem:updatePlatformLevels() 
+    local world = self:getWorld()
+    processEntitiesWithComponents(world, {'platform_level_component'},
+    function(entity)
+        local platformLevel = entity.platform_level_component
+        local platformPosition = entity.position
+        local platformMove = entity.moving_component
+
+        if not CameraInstance:inCameraRange(platformPosition) then
+            return
+        end
+
+        local linePosition = platformLevel.pulleyLine.position
+        linePosition.scale.y = platformPosition:getTop() - linePosition:getTop()
+        local otherPlatform = platformLevel:getOtherPlatform()
+
+        -- If the level reaches max height
+        if platformPosition:getTop() < platformLevel.pulleyHeight then
+            platformPosition:setTop(platformLevel.pulleyHeight)
+            platformMove.velocity.x = 0
+            platformMove.velocity.y = 0
+
+            otherPlatform.moving_component.acceleration.y = 0
+            otherPlatform:give('gravity_component')
+            otherPlatform:give('collision_exempt_component')
+            otherPlatform:give('destroy_outside_camera_component')
+
+            otherPlatform:remove('platform_level_component')
+            entity:remove('platform_level_component')
+            return
+        end
+
+        if not entity:has('top_collision_component') then
+            --Slows the platform down if the other platform isn't accelerating
+            if otherPlatform.moving_component.acceleration.y == 0 then
+                platformMove.velocity.y = platformMove.velocity.y * 0.92
+                -- Sets the 2 platforms to have opposite velocities
+                otherPlatform.moving_component.velocity.y = -platformMove.velocity.y
+            end
+
+            platformMove.acceleration.y = 0
+            return
+        end
+
+        platformMove.acceleration.y = 0.12
+        -- Sets the 2 platforms to have opposite velocities
+        otherPlatform.moving_component.velocity.y = -platformMove.velocity.y
+        -- NEW CODE
+        if platformMove.velocity.y > 1 then
+            platformMove.velocity.y = 1
+        elseif platformMove.velocity.y < -1 then
+            platformMove.velocity.y = -1
+        end
+        --END NEW CODE
+        entity:remove('top_collision_component')
+    end)
 end

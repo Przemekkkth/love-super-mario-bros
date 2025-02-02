@@ -24,6 +24,10 @@ function AnimationComponent:setFramesPerSecond(fps)
     self.frameDelay = math.floor(MAX_FPS / self.framesPerSecond)
 end
 
+function AnimationComponent:setFrameIDs(frameIDs)
+    self.frameIDs = frameIDs
+end
+
 function AnimationComponent:removed()
     self.frameIDs = nil
     self.framesPerSecond = nil

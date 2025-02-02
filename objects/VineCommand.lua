@@ -1,8 +1,10 @@
 VineCommand = SequenceCommand:extend()
 
-function VineCommand:new(scene, warpSystem, world, vine, player)
+function VineCommand:new(scene, world, vine)
     VineCommand.super.new(self, {})
     local vineComponent = vine.vine_component
+    local warpSystem = world:getSystem(WarpSystem)
+    local player = world:getSystem(PlayerSystem):getMario()
     local playerMove = player.moving_component
     local playerPosition = player.position
 

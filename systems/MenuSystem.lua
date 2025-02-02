@@ -1,16 +1,22 @@
 MenuSystem = Concord.system()
 
-function MenuSystem:init(world) --onAddedToWorld(world))
-   self.logo = Concord.entity(world)
-   self.levelSelectBackground = Concord.entity(world)
-   self.aboutText = Concord.entity(world)
-   self.selectText = Concord.entity(world)
-   self.optionsText = Concord.entity(world)
-   self.levelSelectText = Concord.entity(world)
-   self.levelNumber = Concord.entity(world)
-   self.underline = Concord.entity(world)
-   self.cursor = Concord.entity(world)
-   self.loveLogo = Concord.entity(world)
+function MenuSystem:init(world)
+   self.world = world
+   self:initProperties()
+   self:createEntities()
+end
+
+function MenuSystem:initProperties()
+   self.logo = Concord.entity(self.world)
+   self.levelSelectBackground = Concord.entity(self.world)
+   self.aboutText = Concord.entity(self.world)
+   self.selectText = Concord.entity(self.world)
+   self.optionsText = Concord.entity(self.world)
+   self.levelSelectText = Concord.entity(self.world)
+   self.levelNumber = Concord.entity(self.world)
+   self.underline = Concord.entity(self.world)
+   self.cursor = Concord.entity(self.world)
+   self.loveLogo = Concord.entity(self.world)
 
    self.levelChange = false
    self.underlineChange = false
@@ -22,7 +28,9 @@ function MenuSystem:init(world) --onAddedToWorld(world))
    self.currentFocus = 0       -- 0 is to select, 1 selecting level
    self.currentOption = 0      -- 0 is level select, 1 is options
    self.currentLevelFocus = 0  -- 0 is level, 1 is sublevel
-   
+end
+
+function MenuSystem:createEntities()
    self:createLogo(7 * SCALED_CUBE_SIZE, 2 * SCALED_CUBE_SIZE)
    self:createLevelSelectBackground(5.5 * SCALED_CUBE_SIZE, 9.5 * SCALED_CUBE_SIZE)
    self:createAboutText(5.5 * SCALED_CUBE_SIZE, 8.25 * SCALED_CUBE_SIZE)
@@ -36,29 +44,65 @@ function MenuSystem:init(world) --onAddedToWorld(world))
    self:createAvatar(14 * SCALED_CUBE_SIZE, 10 * SCALED_CUBE_SIZE)
 end
 
-function MenuSystem:hideMenuText()
-   self.cursor.text:setVisible(false)
-   self.aboutText.text:setVisible(false)
-   self.selectText.text:setVisible(false)
-   self.optionsText.text:setVisible(false)
-   self.levelSelectText.text:setVisible(false)
-   self.levelNumber.text:setVisible(false)
-   self.underline.text:setVisible(false)
+function MenuSystem:createLogo(x, y)
+   self.logo:give('position', {x = x, y = y}, {x = 11 * SCALED_CUBE_SIZE, y = 6 * SCALED_CUBE_SIZE} )
+   self.logo:give('texture', LOGO_IMG)
+   self.logo:give('icon')
 end
 
-function MenuSystem:showMenuText()
-   self.cursor.text:setVisible(true)
-   self.aboutText.text:setVisible(true)
-   self.selectText.text:setVisible(true)
-   self.optionsText.text:setVisible(true)
+function MenuSystem:createLevelSelectBackground(x, y)
+   self.levelSelectBackground:give('position', {x = x, y = y}, {x = 14 * SCALED_CUBE_SIZE, y = 3 * SCALED_CUBE_SIZE} )
+   self.levelSelectBackground:give('texture', OPTIONS_BACKGROUND_IMG, false, false)
+   self.levelSelectBackground.texture:setVisible(false)
+   self.levelSelectBackground:give('icon')
 end
 
-function MenuSystem:getSelectedLevel()
-   return self.selectedLevel
+function MenuSystem:createAboutText(x, y)
+   self.aboutText:give('position', {x = x, y = y})
+   self.aboutText:give('text', 'Recreated by Gold87 using C++ and SDL2\n\n\tPorted to LÖVE by Przemekkkth', 12)
 end
 
-function MenuSystem:getSelectedSublevel()
-   return self.selectedSublevel
+function MenuSystem:createSelectText(x, y)
+   self.selectText:give('position', {x = x, y = y})
+   self.selectText:give('text', 'Level Select', 15)
+end
+
+function MenuSystem:createOptionsText(x, y)
+   self.optionsText:give('position', {x = x, y = y})
+   self.optionsText:give('text', 'Options', 15)
+end   
+
+function MenuSystem:createLevelSelectText(x, y)
+   self.levelSelectText:give('position', {x = 9.5 * SCALED_CUBE_SIZE, y = 10 * SCALED_CUBE_SIZE})
+   self.levelSelectText:give('text', 'Select a Level', 15, false, false)
+end
+
+function MenuSystem:createLevelNumber(x, y)
+   self.levelNumber:give('position', {x = x, y = y})
+   self.levelNumber:give('text', tonumber(self.selectedLevel)..' - '..tonumber(self.selectedSublevel), 15, false, false)
+end
+
+function MenuSystem:createUnderline(x, y)
+   self.underline:give('position', {x = x, y = y})
+   self.underline:give('text', '_', 15, false, false)
+end
+
+function MenuSystem:createCursor(x, y)
+   self.cursor:give('position', {x = x, y = y})
+   self.cursor:give('text', '>', 15)
+end
+
+function MenuSystem:createLoveLogo(x, y)
+   self.loveLogo:give('position', {x = x, y = y}, {x = 4*SCALED_CUBE_SIZE, y = 4*SCALED_CUBE_SIZE})
+   self.loveLogo:give('texture', LOVE_LOGO_IMG)
+   self.loveLogo:give('icon')
+end
+
+function MenuSystem:createAvatar(x, y)
+   local avatar = Concord.entity(self:getWorld())
+   avatar:give('position', {x = x, y = y}, {x = 118, y = 118})
+   avatar:give('texture', AVATAR_IMG)
+   avatar:give('icon')
 end
 
 function MenuSystem:update()
@@ -179,6 +223,31 @@ function MenuSystem:exitLevelSelect()
    self.optionsText.text:setVisible(true);
 end
 
+function MenuSystem:hideMenuText()
+   self.cursor.text:setVisible(false)
+   self.aboutText.text:setVisible(false)
+   self.selectText.text:setVisible(false)
+   self.optionsText.text:setVisible(false)
+   self.levelSelectText.text:setVisible(false)
+   self.levelNumber.text:setVisible(false)
+   self.underline.text:setVisible(false)
+end
+
+function MenuSystem:showMenuText()
+   self.cursor.text:setVisible(true)
+   self.aboutText.text:setVisible(true)
+   self.selectText.text:setVisible(true)
+   self.optionsText.text:setVisible(true)
+end
+
+function MenuSystem:getSelectedLevel()
+   return self.selectedLevel
+end
+
+function MenuSystem:getSelectedSublevel()
+   return self.selectedSublevel
+end
+
 function MenuSystem:levelSelected()
    return self.levelSelect and (self.currentFocus == 1)
 end
@@ -187,63 +256,3 @@ function MenuSystem:optionsSelected()
    return self.currentOption == 1
 end
 
-function MenuSystem:createLogo(x, y)
-   self.logo:give('position', {x = x, y = y}, {x = 11 * SCALED_CUBE_SIZE, y = 6 * SCALED_CUBE_SIZE} )
-   self.logo:give('texture', LOGO_IMG)
-   self.logo:give('icon')
-end
-
-function MenuSystem:createLevelSelectBackground(x, y)
-   self.levelSelectBackground:give('position', {x = x, y = y}, {x = 14 * SCALED_CUBE_SIZE, y = 3 * SCALED_CUBE_SIZE} )
-   self.levelSelectBackground:give('texture', OPTIONS_BACKGROUND_IMG, false, false)
-   self.levelSelectBackground.texture:setVisible(false)
-   self.levelSelectBackground:give('icon')
-end
-
-function MenuSystem:createAboutText(x, y)
-   self.aboutText:give('position', {x = x, y = y})
-   self.aboutText:give('text', 'Recreated by Gold87 using C++ and SDL2\n\n\tPorted to LÖVE by Przemekkkth', 12)
-end
-
-function MenuSystem:createSelectText(x, y)
-   self.selectText:give('position', {x = x, y = y})
-   self.selectText:give('text', 'Level Select', 15)
-end
-
-function MenuSystem:createOptionsText(x, y)
-   self.optionsText:give('position', {x = x, y = y})
-   self.optionsText:give('text', 'Options', 15)
-end   
-
-function MenuSystem:createLevelSelectText(x, y)
-   self.levelSelectText:give('position', {x = 9.5 * SCALED_CUBE_SIZE, y = 10 * SCALED_CUBE_SIZE})
-   self.levelSelectText:give('text', 'Select a Level', 15, false, false)
-end
-
-function MenuSystem:createLevelNumber(x, y)
-   self.levelNumber:give('position', {x = x, y = y})
-   self.levelNumber:give('text', tonumber(self.selectedLevel)..' - '..tonumber(self.selectedSublevel), 15, false, false)
-end
-
-function MenuSystem:createUnderline(x, y)
-   self.underline:give('position', {x = x, y = y})
-   self.underline:give('text', '_', 15, false, false)
-end
-
-function MenuSystem:createCursor(x, y)
-   self.cursor:give('position', {x = x, y = y})
-   self.cursor:give('text', '>', 15)
-end
-
-function MenuSystem:createLoveLogo(x, y)
-   self.loveLogo:give('position', {x = x, y = y}, {x = 4*SCALED_CUBE_SIZE, y = 4*SCALED_CUBE_SIZE})
-   self.loveLogo:give('texture', LOVE_LOGO_IMG)
-   self.loveLogo:give('icon')
-end
-
-function MenuSystem:createAvatar(x, y)
-   local avatar = Concord.entity(self:getWorld())
-   avatar:give('position', {x = x, y = y}, {x = 118, y = 118})
-   avatar:give('texture', AVATAR_IMG)
-   avatar:give('icon')
-end

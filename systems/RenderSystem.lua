@@ -2,47 +2,25 @@ RenderSystem = Concord.system()
 
 function RenderSystem:init(world)
     self.transitionRendering = false
+    self.world = world
 end
 
 function RenderSystem:draw()
     if not self:isEnabled() then
         return
     end
-    
-    local world = self:getWorld()
-    local entities = world:getEntities()
 
     self:drawBackground()
     self:drawForeground()
-    self:drawProjectiles()
-    self:drawCollectibles()
-    self:drawEnemies()
-
-    for _, entity in ipairs(entities) do
-        if not self.transitionRendering then 
-            if entity:has('position') and entity:has('text') and entity:has('floating_text') then
-                self:renderText(entity, entity.text.followCamera)
-            end
-        end
-    end
-
+    self:drawProjectile()
+    self:drawCollectible()
+    self:drawEnemy()
+    self:drawFloatingText()
     self:drawPlayer()
     self:drawAboveForeground()
-    self:drawParticles()
-
-    for _, entity in ipairs(entities) do
-        if entity:has('position') and entity:has('texture') and entity:has('icon') then
-            self:renderEntity(entity, false)
-        end
-    end
-
-    for _, entity in ipairs(entities) do
-        if entity:has('position') and entity:has('text') then
-            if not entity:has('floating_text') then
-                self:renderText(entity, entity.text.followCamera)
-            end
-        end
-    end
+    self:drawParticle()
+    self:drawIcon()
+    self:drawText()
 end
 
 function RenderSystem:setTransitionRendering(transition)
@@ -100,35 +78,12 @@ function RenderSystem:renderText(entity, followCamera)
     end
 end
 
-function RenderSystem:drawLayerInCameraRange(layerName) --position & texture always exists. layer means component name
-    for _, entity in ipairs(self:getWorld():getEntities()) do
-        if not self.transitionRendering then 
-            if entity:has('position') and entity:has('texture') and entity:has(layerName) then
-                if CameraInstance:inCameraRange(entity.position) then
-                    self:renderEntity(entity, true)
-                end
-            end
-        end
-    end
-end
-
-function RenderSystem:drawLayer(layerName) --position & texture always exists. layer means component name
-    for _, entity in ipairs(self:getWorld():getEntities()) do
-        if not self.transitionRendering then 
-            if entity:has('position') and entity:has('texture') and entity:has(layerName) then
-                self:renderEntity(entity, true)
-            end
-        end
-    end
-end
-
 function RenderSystem:drawBackground()
-    local world = self:getWorld()
-    if world:getSystem(BackgroundSystem) == nil then
+    if self.world:getSystem(BackgroundSystem) == nil then
         return
     end
 
-    local backgrounds = world:getSystem(BackgroundSystem):getEntities()
+    local backgrounds = self.world:getSystem(BackgroundSystem):getEntities()
     for _, entity in ipairs(backgrounds) do
         if not self.transitionRendering then 
             if entity:has('position') and entity:has('texture') then
@@ -141,12 +96,11 @@ function RenderSystem:drawBackground()
 end
 
 function RenderSystem:drawForeground()
-    local world = self:getWorld()
-    if world:getSystem(ForegroundSystem) == nil then
+    if self.world:getSystem(ForegroundSystem) == nil then
         return
     end
 
-    local foregrounds = world:getSystem(ForegroundSystem):getEntities()
+    local foregrounds = self.world:getSystem(ForegroundSystem):getEntities()
     for _, entity in ipairs(foregrounds) do
         if not self.transitionRendering then 
             if entity:has('position') and entity:has('texture') then
@@ -158,13 +112,12 @@ function RenderSystem:drawForeground()
     end
 end
 
-function RenderSystem:drawProjectiles()
-    local world = self:getWorld()
-    if world:getSystem(ProjectileSystem) == nil then
+function RenderSystem:drawProjectile()
+    if self.world:getSystem(ProjectileSystem) == nil then
         return
     end
 
-    local projectiles = world:getSystem(ProjectileSystem):getEntities()
+    local projectiles = self.world:getSystem(ProjectileSystem):getEntities()
     for _, entity in ipairs(projectiles) do
         if not self.transitionRendering then 
             if entity:has('position') and entity:has('texture') then
@@ -174,12 +127,11 @@ function RenderSystem:drawProjectiles()
     end
 end
 
-function RenderSystem:drawCollectibles()
-    local world = self:getWorld()
-    if world:getSystem(CollectibleSystem) == nil then
+function RenderSystem:drawCollectible()
+    if self.world:getSystem(CollectibleSystem) == nil then
         return
     end
-    local collectibles = world:getSystem(CollectibleSystem):getEntities()
+    local collectibles = self.world:getSystem(CollectibleSystem):getEntities()
     for _, entity in ipairs(collectibles) do
         if not self.transitionRendering then 
             if entity:has('position') and entity:has('texture') then
@@ -191,13 +143,12 @@ function RenderSystem:drawCollectibles()
     end
 end
 
-function RenderSystem:drawEnemies()
-    local world = self:getWorld()
-    if world:getSystem(EnemySystem) == nil then
+function RenderSystem:drawEnemy()
+    if self.world:getSystem(EnemySystem) == nil then
         return
     end
 
-    local enemies = world:getSystem(EnemySystem):getEntities()
+    local enemies = self.world:getSystem(EnemySystem):getEntities()
     for _, entity in ipairs(enemies) do
         if not self.transitionRendering then 
             if entity:has('position') and entity:has('texture') then
@@ -209,24 +160,32 @@ function RenderSystem:drawEnemies()
     end
 end
 
+function RenderSystem:drawFloatingText()
+    for _, entity in ipairs(self.world:getEntities()) do
+        if not self.transitionRendering then 
+            if entity:has('position') and entity:has('text') and entity:has('floating_text') then
+                self:renderText(entity, entity.text.followCamera)
+            end
+        end
+    end
+end
+
 function RenderSystem:drawPlayer()
-    local world = self:getWorld()
-    if world:getSystem(PlayerSystem) == nil then
+    if self.world:getSystem(PlayerSystem) == nil then
         return
     end
 
     if not self.transitionRendering then
-        self:renderEntity( world:getSystem(PlayerSystem):getMario(), true)
+        self:renderEntity( self.world:getSystem(PlayerSystem):getMario(), true)
     end
 end
 
 function RenderSystem:drawAboveForeground()
-    local world = self:getWorld()
-    if world:getSystem(AboveForegroundSystem) == nil then
+    if self.world:getSystem(AboveForegroundSystem) == nil then
         return
     end
 
-    local aboveforegrounds = world:getSystem(AboveForegroundSystem):getEntities()
+    local aboveforegrounds = self.world:getSystem(AboveForegroundSystem):getEntities()
     for _, entity in ipairs(aboveforegrounds) do
         if not self.transitionRendering then 
             if entity:has('position') and entity:has('texture') then
@@ -238,17 +197,34 @@ function RenderSystem:drawAboveForeground()
     end
 end
 
-function RenderSystem:drawParticles()
-    local world = self:getWorld()
-    if world:getSystem(ParticleSystem) == nil then
+function RenderSystem:drawParticle()
+    if self.world:getSystem(ParticleSystem) == nil then
         return
     end
 
-    local particles = world:getSystem(ParticleSystem):getEntities()
+    local particles = self.world:getSystem(ParticleSystem):getEntities()
     for _, entity in ipairs(particles) do
         if not self.transitionRendering then 
             if entity:has('position') and entity:has('texture') then
                 self:renderEntity(entity, true)
+            end
+        end
+    end
+end
+
+function RenderSystem:drawIcon()
+    for _, entity in ipairs(self.world:getEntities()) do
+        if entity:has('position') and entity:has('texture') and entity:has('icon') then
+            self:renderEntity(entity, false)
+        end
+    end
+end
+
+function RenderSystem:drawText()
+    for _, entity in ipairs(self.world:getEntities()) do
+        if entity:has('position') and entity:has('text') then
+            if not entity:has('floating_text') then
+                self:renderText(entity, entity.text.followCamera)
             end
         end
     end
