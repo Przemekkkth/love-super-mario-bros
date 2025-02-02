@@ -780,9 +780,8 @@ function MapSystem:dispenseOneUp(entityID)
         dispenseSound:give('sound_component', SOUND_ID.POWER_UP_APPEAR)
         local oneup = Concord.entity(self.world)
         local position   = originalBlock.position
-        local yOffset = -4 -- add to avoid collison during brick bumps
 
-        oneup:give('position', {x = position.position.x, y = position.position.y + yOffset}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
+        oneup:give('position', {x = position.position.x, y = position.position.y}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
         local oneupID = self:getReferenceBlockIDAsEntity(entityID, 52)
         oneup:give('texture', BLOCK_TILESHEET_IMG)
         oneup:give('spritesheet', oneup.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE, 1, 1, 1, ORIGINAL_CUBE_SIZE,
