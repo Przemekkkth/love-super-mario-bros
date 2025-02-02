@@ -95,6 +95,8 @@ function MapSystem:createEnemyEntities()
 end
 
 function MapSystem:createAboveForegroundEntities()
+    MapSystem.WARP_PIPE_CODE1 = 150
+    MapSystem.WARP_PIPE_CODE2 = 292
     local aboveForegroundMap = self.scene:getAboveForegroundMap()
     local mapHeight = #aboveForegroundMap:getLevelData()
     local mapWidth  = #aboveForegroundMap:getLevelData()[1] 
@@ -109,48 +111,51 @@ function MapSystem:createAboveForegroundEntities()
                 entity:give('texture', BLOCK_TILESHEET_IMG, false, false)
                 entity:give('spritesheet', entity.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE, 1, 1, 1, ORIGINAL_CUBE_SIZE,
                     ORIGINAL_CUBE_SIZE, MapInstance:getBlockCoord(entityID))
+                entity:give('above_foreground')
+                
                 local warpPipeLocations = self.scene:getLevelData().warpPipeLocation
-                --[ {"pipe_coords": [57, 9], "teleport_coords": [2, 20], "camera_coords": [0, 18], "going_in": "DOWN", "going_out": "NONE", "freeze_camera": true, "bg_color": "BLACK", "level_type": "UNDERGROUND", "level_to_go": [0, 0]} ]
-                local position = entity.position
                 for key, warpPipeLocation in ipairs(warpPipeLocations) do
                     if (x - 1) == warpPipeLocation.pipe_coords[1] and (y - 1) == warpPipeLocation.pipe_coords[2] then
                         if warpPipeLocation.going_in ~= "NONE" then
-                            local playerCoordinates = {x = warpPipeLocation.teleport_coords[1], y = warpPipeLocation.teleport_coords[2] }
-                            local cameraCoordinates = {x = warpPipeLocation.camera_coords[1], y = warpPipeLocation.camera_coords[2] }
-                            local inDirection = Level:convertDirectionTextToType(warpPipeLocation.going_in)
-                            local outDirection = Level:convertDirectionTextToType(warpPipeLocation.going_out)
-                            local cameraFreeze = warpPipeLocation.freeze_camera
-                            local color = Level:convertBGColorTextToType(warpPipeLocation.bg_color)
-                            local levelType = Level:convertLevelTextToType(warpPipeLocation.level_type)
-                            local newLevel = {x = warpPipeLocation.level_to_go[1], y = warpPipeLocation.level_to_go[2] }
-
-                            entity:give('warp_pipe_component', playerCoordinates, cameraCoordinates,
-                                                               inDirection, outDirection, cameraFreeze,
-                                                               color, levelType, newLevel)
-
-                            if inDirection == DIRECTION.UP then
-                                position.hitbox.x = 32
-                                position.hitbox.w = 0
-                            elseif inDirection == DIRECTION.DOWN then
-                                position.hitbox.x = 32
-                                position.hitbox.w = 0
-                            elseif inDirection == DIRECTION.LEFT then
-                                position.hitbox.y = 32
-                                position.hitbox.h = 0
-                            elseif inDirection == DIRECTION.RIGHT then    
-                                position.hitbox.y = 32
-                                position.hitbox.h = 0
-                            end
+                            self:addWarpPipeComponetToEntity(entity, warpPipeLocation)
                         end
                     end
                 end
-
-                entity:give('above_foreground')
             elseif referenceID ~= MapSystem.INVALID_CODE then
                 self:createAboveForegroundEntity(x, y, entityID)
             end
-
         end
+    end
+end
+
+function MapSystem:addWarpPipeComponetToEntity(entity, warpPipeLocation)
+    --[ {"pipe_coords": [57, 9], "teleport_coords": [2, 20], "camera_coords": [0, 18], "going_in": "DOWN", "going_out": "NONE", "freeze_camera": true, "bg_color": "BLACK", "level_type": "UNDERGROUND", "level_to_go": [0, 0]} ]
+    local position = entity.position
+    local playerCoordinates = {x = warpPipeLocation.teleport_coords[1], y = warpPipeLocation.teleport_coords[2] }
+    local cameraCoordinates = {x = warpPipeLocation.camera_coords[1], y = warpPipeLocation.camera_coords[2] }
+    local inDirection = Level:convertDirectionTextToType(warpPipeLocation.going_in)
+    local outDirection = Level:convertDirectionTextToType(warpPipeLocation.going_out)
+    local cameraFreeze = warpPipeLocation.freeze_camera
+    local color = Level:convertBGColorTextToType(warpPipeLocation.bg_color)
+    local levelType = Level:convertLevelTextToType(warpPipeLocation.level_type)
+    local newLevel = {x = warpPipeLocation.level_to_go[1], y = warpPipeLocation.level_to_go[2] }
+
+    entity:give('warp_pipe_component', playerCoordinates, cameraCoordinates,
+                                       inDirection, outDirection, cameraFreeze,
+                                       color, levelType, newLevel)
+
+    if inDirection == DIRECTION.UP then
+        position.hitbox.x = 32
+        position.hitbox.w = 0
+    elseif inDirection == DIRECTION.DOWN then
+        position.hitbox.x = 32
+        position.hitbox.w = 0
+    elseif inDirection == DIRECTION.LEFT then
+        position.hitbox.y = 32
+        position.hitbox.h = 0
+    elseif inDirection == DIRECTION.RIGHT then    
+        position.hitbox.y = 32
+        position.hitbox.h = 0
     end
 end
 
@@ -219,8 +224,15 @@ function MapSystem:createForegroundEntity(coordinateX, coordinateY, entityID, re
     MapSystem.AXE_CODE = 240
     MapSystem.BRICK_CODE1 = 289
     MapSystem.BRICK_CODE2 = 290
+    MapSystem.BRIDGE_CHAIN_CODE = 339
     MapSystem.TRAMPOLINE_CODE = 346
-    
+    MapSystem.BRIDGE_CODE = 392
+    MapSystem.MOVING_PLATFORM_1WIDE_CODE = 609
+    MapSystem.MOVING_PLATFORM_2WIDE_CODE = 761
+    MapSystem.MOVING_PLATFORM_3WIDE_CODE = 809
+    MapSystem.CLOUD_PLATFORM_CODE1 = 610
+    MapSystem.CLOUD_PLATFORM_CODE2 = 857
+
     local world = self:getWorld()
     local collectiblesMap = self.scene:getCollectiblesMap()
 
@@ -228,15 +240,15 @@ function MapSystem:createForegroundEntity(coordinateX, coordinateY, entityID, re
         self:createCoin(coordinateX, coordinateY, entityID)
     elseif referenceID == MapSystem.BULLET_BILL_CANNON_CODE then 
         self:createBulletBillCannon(coordinateX, coordinateY, entityID)
-    elseif referenceID == MapSystem.FLAG_POLE_CODE1 or referenceID == MapSystem.FLAG_POLE_CODE2 then -- FLAG POLE
+    elseif referenceID == MapSystem.FLAG_POLE_CODE1 or referenceID == MapSystem.FLAG_POLE_CODE2 then 
         self:createFlagPole(coordinateX, coordinateY, entityID)
-    elseif referenceID == MapSystem.FLAG_CODE then -- FLAG
+    elseif referenceID == MapSystem.FLAG_CODE then 
         self:createFlag(coordinateX, coordinateY, entityID)
-    elseif referenceID == MapSystem.QUESTION_BLOCK_CODE then -- QUESTION BLOCK   
+    elseif referenceID == MapSystem.QUESTION_BLOCK_CODE then 
         self:createQuestionBlock(coordinateX, coordinateY, entityID)
-    elseif referenceID == MapSystem.AXE_CODE then -- AXE  
+    elseif referenceID == MapSystem.AXE_CODE then 
         self:createAxe(coordinateX, coordinateY, entityID)
-    elseif referenceID == MapSystem.BRICK_CODE1 or referenceID == MapSystem.BRICK_CODE2 then -- BRICKS
+    elseif referenceID == MapSystem.BRICK_CODE1 or referenceID == MapSystem.BRICK_CODE2 then 
         local entity = self:createBlockEntity(coordinateX, coordinateY, entityID)
         local debrisID = self:getReferenceBlockIDAsEntity(entityID, 291)
         entity:give('destructible_component', MapInstance:getBlockCoord(debrisID))
@@ -262,98 +274,24 @@ function MapSystem:createForegroundEntity(coordinateX, coordinateY, entityID, re
             entity:give('mystery_box_component', boxType)
             self:addItemDispenser(entity, entityID)
         end
-    elseif referenceID == 339 then -- BRIDGE CHAIN (this is here so it gets destroyed with the bridge
-        local isCastleLevelType = (self.scene:getLevelData():getLevelType() == LEVEL_TYPE.CASTLE)
-        if isCastleLevelType then
-            local bridgeChain = self:createBlockEntity(coordinateX, coordinateY, entityID)
-            bridgeChain:give('bridge_chain')
-        else
-            self:createBlockEntity(coordinateX, coordinateY, entityID)
-        end
-    elseif referenceID == MapSystem.TRAMPOLINE_CODE then -- TRAMPOLINE
+    elseif referenceID == MapSystem.BRIDGE_CHAIN_CODE then 
+        self:createBridgeChain(coordinateX, coordinateY, entityID)
+    elseif referenceID == MapSystem.TRAMPOLINE_CODE then 
         self:createTrampoline(coordinateX, coordinateY, entityID)
-    elseif referenceID == 392 then -- BRIDGE
-        if self.scene:getLevelData():getLevelType() == LEVEL_TYPE.CASTLE then
-            if self:getReferenceBlockID(self.scene:getForegroundMap():getLevelData()[coordinateY][coordinateX - 1]) ~= 392 then
-                local bridge = self:createBlockEntity(coordinateX, coordinateY, entityID)
-                bridge:give('bridge_component')
-                local bridgeComponent = bridge.bridge_component
-                table.insert(bridgeComponent.connectedBridgeParts, bridge)
-                local futureCoordinateCheck = coordinateX + 1
-                while self:getReferenceBlockID(self.scene:getForegroundMap():getLevelData()[coordinateY][futureCoordinateCheck]) == 392 do
-                    local connectedBridge = self:createBlockEntity(futureCoordinateCheck, coordinateY, entityID)
-                    table.insert(bridgeComponent.connectedBridgeParts, connectedBridge)
-                    futureCoordinateCheck = futureCoordinateCheck + 1
-                end
-            end
-        else
-            self:createBlockEntity(coordinateX, coordinateY, entityID)
-        end
-    elseif referenceID == 609 then -- MOVING PLATFORM
+    elseif referenceID == MapSystem.BRIDGE_CODE then 
+        self:createBridge(coordinateX, coordinateY, entityID)
+    elseif referenceID == MapSystem.MOVING_PLATFORM_1WIDE_CODE then
         self:createBlockEntity(coordinateX, coordinateY, entityID)
-    elseif referenceID == 761 then -- MOVING PLATFORM (2 wide)
-        for _, movingPlatformDirection in ipairs(self.scene:getLevelData().movingPlatformDirections) do
-            local platformX = movingPlatformDirection.coords[1]
-            local platformY = movingPlatformDirection.coords[2]
-            if (coordinateX-1) == platformX and (coordinateY-1) == platformY then
-                self:createPlatformEntity(coordinateX, coordinateY, entityID, 2, movingPlatformDirection)
-            end
+    elseif referenceID == MapSystem.MOVING_PLATFORM_2WIDE_CODE then
+        self:create2WideMovingPlatform(coordinateX, coordinateY, entityID)
+    elseif referenceID == MapSystem.MOVING_PLATFORM_3WIDE_CODE then
+        self:create3WideMovingPlatform(coordinateX, coordinateY, entityID)
+    elseif referenceID == MapSystem.CLOUD_PLATFORM_CODE1 or referenceID == MapSystem.CLOUD_PLATFORM_CODE2 then -- CLOUD PLATFORM
+        if referenceID == MapSystem.CLOUD_PLATFORM_CODE1 then
+            entityID = MapSystem.CLOUD_PLATFORM_CODE2
         end
-        if #self.scene:getLevelData().movingPlatformDirections == 0 then
-            local platform = Concord.entity(world)
-            platform:give('position', {x = (coordinateX - 1) * SCALED_CUBE_SIZE, y = (coordinateY - 1) * SCALED_CUBE_SIZE}, {x = 2 * SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
-            platform:give('texture', BLOCK_TILESHEET_IMG)
-            platform:give('spritesheet', platform.texture, ORIGINAL_CUBE_SIZE * 2, ORIGINAL_CUBE_SIZE, 1, 1, 1, ORIGINAL_CUBE_SIZE,
-                                                           ORIGINAL_CUBE_SIZE, MapInstance:getBlockCoord(entityID))
-            platform:give('foreground')
-            platform:give('tile_component')
-        end
-    elseif referenceID == 762 then -- MOVING PLATFORM (2 wide)
-    elseif referenceID == 809 then -- MOVING PLATFORM (3 wide)
-        local platformData = nil
-        for _, movingPlatformDirection in ipairs(self.scene:getLevelData().movingPlatformDirections) do
-            if movingPlatformDirection.coords[1] == (coordinateX-1) and movingPlatformDirection.coords[2] == (coordinateY-1) then
-                platformData = movingPlatformDirection
-            end
-        end
-
-        if platformData == nil then
-            return
-        end
-
-        local motionType = Level:convertMotionTextToType(platformData.motion)
-        if motion ~= PLATFORM_MOTION_TYPE.NONE then
-            self:createPlatformEntity(coordinateX, coordinateY, entityID, 3, platformData)
-            return
-        end
-    elseif referenceID == 810 or referenceID == 811 then
-        -- To Do: check length of platform
-    elseif referenceID == 857 or referenceID == 610 then -- CLOUD PLATFORM
-        if referenceID == 610 then
-            entityID = 857
-        end
-        local entity = Concord.entity(world)
-        entity:give('position', {x = (coordinateX-1) * SCALED_CUBE_SIZE, y = (coordinateY-1) * SCALED_CUBE_SIZE}, {x = 3 * SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
-        entity:give('texture', BLOCK_TILESHEET_IMG)
-        entity:give('spritesheet', entity.texture, ORIGINAL_CUBE_SIZE * 3, ORIGINAL_CUBE_SIZE, 1,
-                                                   1, 1, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE,
-                                                    MapInstance:getBlockCoord(entityID))
-        entity:give('moving_component', {x = 0, y = 0}, {x = 0, y = 0})
-        entity:give('friction_exempt_component')
-        entity:give('wait_until_component', 
-        function(entity)
-            return entity:has('top_collision_component')
-        end,
-        function(entity)
-            entity.moving_component.velocity.x = 2.0
-            entity:remove('wait_until_component')
-        end)
-
-        entity:give('foreground')
-        entity:give('tile_component')
-    elseif referenceID == 858 or referenceID == 859 then
-        -- To Do investigate(cloud platform)
-    elseif referenceID ~= MapSystem.INVALID_CODE then
+        self:createCloudPlatform(coordinateX, coordinateY, entityID)
+    elseif referenceID ~= MapSystem.INVALID_CODE and referenceID ~= 762 and referenceID ~= 810 and referenceID ~= 811 and referenceID ~= 858 and referenceID ~= 859 then
         self:createBlockEntity(coordinateX, coordinateY, entityID)
     end
 end
@@ -521,11 +459,100 @@ function MapSystem:createBrick(x, y, entityID)
     end
 end
 
+function MapSystem:createBridgeChain(x, y, entityID)
+    --(this is here so it gets destroyed with the bridge)
+    local isCastleLevelType = (self.scene:getLevelData():getLevelType() == LEVEL_TYPE.CASTLE)
+    if isCastleLevelType then
+        local bridgeChain = self:createBlockEntity(x, y, entityID)
+        bridgeChain:give('bridge_chain')
+    else
+        self:createBlockEntity(x, y, entityID)
+    end
+end
+
 function MapSystem:createTrampoline(x, y, entityID)
     local trampolineTop = self:createBlockEntity(x, y, entityID)
     local trampolineBottom = self:createBlockEntity(x, y + 1, entityID + 48)
     trampolineBottom:remove('tile_component')
     trampolineTop:give('trampoline_component', trampolineBottom, {entityID, entityID + 1, entityID + 2}, {entityID + 48, entityID + 1 + 48, entityID + 2 + 48})
+end
+
+function MapSystem:createBridge(x, y, entityID)
+    local isCastleLevelType = (self.scene:getLevelData():getLevelType() == LEVEL_TYPE.CASTLE)
+    if isCastleLevelType then
+        if self:getReferenceBlockID(self.scene:getForegroundMap():getLevelData()[y][x - 1]) ~= MapSystem.BRIDGE_CODE then
+            local bridge = self:createBlockEntity(x, y, entityID)
+            bridge:give('bridge_component')
+            local bridgeComponent = bridge.bridge_component
+            table.insert(bridgeComponent.connectedBridgeParts, bridge)
+            local futureCoordinateCheck = x + 1
+            while self:getReferenceBlockID(self.scene:getForegroundMap():getLevelData()[y][futureCoordinateCheck]) == MapSystem.BRIDGE_CODE do
+                local connectedBridge = self:createBlockEntity(futureCoordinateCheck, y, entityID)
+                table.insert(bridgeComponent.connectedBridgeParts, connectedBridge)
+                futureCoordinateCheck = futureCoordinateCheck + 1
+            end
+        end
+    else
+        self:createBlockEntity(x, y, entityID)
+    end
+end
+
+function MapSystem:create2WideMovingPlatform(x, y, entityID)
+    local wide = 2
+    for _, movingPlatformDirection in ipairs(self.scene:getLevelData().movingPlatformDirections) do
+        local platformX = movingPlatformDirection.coords[1]
+        local platformY = movingPlatformDirection.coords[2]
+        if (x - 1) == platformX and (y - 1) == platformY then
+            self:createPlatformEntity(x, y, entityID, wide, movingPlatformDirection)
+        end
+    end
+    if #self.scene:getLevelData().movingPlatformDirections == 0 then
+        local platform = self:createBlockEntity(x, y, entityID)
+        platform.spritesheet:setEntityWidth(wide*ORIGINAL_CUBE_SIZE)
+        platform.position.hitbox.w = wide*SCALED_CUBE_SIZE
+    end
+end
+
+function MapSystem:create3WideMovingPlatform(x, y, entityID)
+    local wide = 3
+    local platformData = nil
+    for _, movingPlatformDirection in ipairs(self.scene:getLevelData().movingPlatformDirections) do
+        if movingPlatformDirection.coords[1] == (x - 1) and movingPlatformDirection.coords[2] == (y - 1) then
+            platformData = movingPlatformDirection
+        end
+    end
+
+    if platformData == nil then
+        return
+    end
+
+    local motionType = Level:convertMotionTextToType(platformData.motion)
+    if motion ~= PLATFORM_MOTION_TYPE.NONE then
+        self:createPlatformEntity(x, y, entityID, wide, platformData)
+        return
+    end
+end
+
+function MapSystem:createCloudPlatform(x, y, entityID)
+    local entity = Concord.entity(self.world)
+    entity:give('position', {x = (x - 1) * SCALED_CUBE_SIZE, y = (y - 1) * SCALED_CUBE_SIZE}, {x = 3 * SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
+    entity:give('texture', BLOCK_TILESHEET_IMG)
+    entity:give('spritesheet', entity.texture, ORIGINAL_CUBE_SIZE * 3, ORIGINAL_CUBE_SIZE, 1,
+                                               1, 1, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE,
+                                                MapInstance:getBlockCoord(entityID))
+    entity:give('moving_component', {x = 0, y = 0}, {x = 0, y = 0})
+    entity:give('friction_exempt_component')
+    entity:give('wait_until_component', 
+    function(entity)
+        return entity:has('top_collision_component')
+    end,
+    function(entity)
+        entity.moving_component.velocity.x = 2.0
+        entity:remove('wait_until_component')
+    end)
+
+    entity:give('foreground')
+    entity:give('tile_component')
 end
 
 function MapSystem:createBlockEntity(coordinateX, coordinateY, entityID)
@@ -593,91 +620,13 @@ function MapSystem:addItemDispenser(entity, entityID)
     elseif mysteryBox.type == MYSTERY_BOX_TYPE.ONE_UP then
         mysteryBox.whenDispensed = self:dispenseOneUp(entityID)
     elseif mysteryBox.type == MYSTERY_BOX_TYPE.VINES then
-        local blockPositionX = entity.position.position.x / SCALED_CUBE_SIZE
-        local blockPositionY = entity.position.position.y / SCALED_CUBE_SIZE
         local vineData = self.scene:getLevelData().vineLocations[1]
         --{"vine_coords": [83, 20], "teleport_coords": [83, 13], "camera_coords": [79, 0], "y": 13, "normal_teleport_coords": [162, 16], "camera_start": 224, "bg_color": "BLUE", "level_type": "OVERWORLD"}  
         if vineData.vine_coords[1] == 0 and vineData.vine_coords[2] == 0 then
             return
         end
 
-        local vineParts = {}
-        local vineLength = 0
-
-        local vineTopID = self:getReferenceBlockIDAsEntity(entityID, 100)
-        local vineBodyID = self:getReferenceBlockIDAsEntity(entityID, 148)
-
-        mysteryBox.whenDispensed = function(originalBlock)
-            local dispenseSound = Concord.entity(world)
-            dispenseSound:give('sound_component', SOUND_ID.POWER_UP_APPEAR)
-
-            originalBlock:give('above_foreground')
-            local vineTop = Concord.entity(world)
-            local position = originalBlock.position
-            vineTop:give('position', {x = position.position.x, y = position.position.y}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
-            vineTop:give('texture', BLOCK_TILESHEET_IMG)
-            vineTop:give('spritesheet', vineTop.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE, 1, 1, 1, ORIGINAL_CUBE_SIZE,
-                                           ORIGINAL_CUBE_SIZE, MapInstance:getBlockCoord(vineTopID))
-            vineTop:give('moving_component', {x = 0, y = -1}, {x = 0, y = 0})
-            vineTop:give('move_outside_camera_component')
-            vineTop:give('friction_exempt_component')
-            vineTop:give('collision_exempt_component')
-            vineTop:give('vine_component', vineData.vine_coords, vineData.teleport_coords, vineData.camera_coords,
-                                           vineData.y,
-                                           vineData.reset_location,
-                                           vineData.camera_max, 
-                                           Level:convertBGColorTextToType(vineData.bg_color),
-                                           Level:convertLevelTextToType(vineData.level_type), 
-                                           vineParts)
-            vineTop:give('foreground')
-            table.insert(vineParts, vineTop)
-            vineLength = vineLength + 1
-
-            --[[
-                Periodically waits until the bottom of the vine has moved past the block, and then
-                adds another piece to the vine.
-                This keeps happening until the vine has fully grown
-            ]]
-            local vineGrowController = Concord.entity(world)
-            vineGrowController:give('wait_until_component', 
-            function(entity)
-                local position = originalBlock.position
-                return vineParts[#vineParts].position:getBottom() <= position:getTop()
-            end,
-            function(entity)
-                local position = originalBlock.position
-                --Adds another part to the vine
-                if vineLength < 6 then
-                    local vinePiece = Concord.entity(world)
-                    vinePiece:give('position', {x = position.position.x, y = position.position.y}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
-                    vinePiece:give('texture', BLOCK_TILESHEET_IMG)
-                    vinePiece:give('spritesheet', vinePiece.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE, 1, 1, 1, ORIGINAL_CUBE_SIZE,
-                                                                     ORIGINAL_CUBE_SIZE, MapInstance:getBlockCoord(vineBodyID))
-                    vinePiece:give('moving_component', {x = 0, y = -1}, {x = 0, y = 0})
-                    vinePiece:give('move_outside_camera_component')
-                    vinePiece:give('friction_exempt_component')
-                    vinePiece:give('collision_exempt_component')
-                    vinePiece:give('vine_component', vineData.vine_coords, vineData.teleport_coords, vineData.camera_coords,
-                                                     vineData.y,
-                                                     vineData.reset_location,
-                                                     vineData.camera_max, 
-                                                     Level:convertBGColorTextToType(vineData.bg_color),
-                                                     Level:convertLevelTextToType(vineData.level_type), 
-                                                     vineParts)
-                    
-                    vinePiece:give('foreground')
-                    table.insert(vineParts, vinePiece)
-                    vineLength = vineLength + 1
-                    --If the vine is fully grown and the last vine is no longer in the block
-                elseif vineParts[#vineParts].position:getBottom() < position:getTop() then
-                    for _, e in ipairs(vineParts) do
-                        e.moving_component.velocity.y = 0
-                    end
-                    vineGrowController:remove('wait_until_component')
-                    world:removeEntity(vineGrowController)
-                end
-            end)
-        end
+        mysteryBox.whenDispensed = self:dispenseVine(entityID)
     end
 end
 
@@ -854,6 +803,86 @@ function MapSystem:dispenseOneUp(entityID)
                 entity:remove('collision_exempt_component')
                 entity:remove('wait_until_component')
             end)
+    end
+end
+
+function MapSystem:dispenseVine(entityID)
+    return function(originalBlock)
+        local vineData = self.scene:getLevelData().vineLocations[1]
+        local vineParts = {}
+        local vineLength = 0
+
+        local vineTopID = self:getReferenceBlockIDAsEntity(entityID, 100)
+        local vineBodyID = self:getReferenceBlockIDAsEntity(entityID, 148)
+        local dispenseSound = Concord.entity(self.world)
+        dispenseSound:give('sound_component', SOUND_ID.POWER_UP_APPEAR)
+
+        originalBlock:give('above_foreground')
+        local vineTop = Concord.entity(self.world)
+        local position = originalBlock.position
+        vineTop:give('position', {x = position.position.x, y = position.position.y}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
+        vineTop:give('texture', BLOCK_TILESHEET_IMG)
+        vineTop:give('spritesheet', vineTop.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE, 1, 1, 1, ORIGINAL_CUBE_SIZE,
+                                       ORIGINAL_CUBE_SIZE, MapInstance:getBlockCoord(vineTopID))
+        vineTop:give('moving_component', {x = 0, y = -1}, {x = 0, y = 0})
+        vineTop:give('move_outside_camera_component')
+        vineTop:give('friction_exempt_component')
+        vineTop:give('collision_exempt_component')
+        vineTop:give('vine_component', vineData.vine_coords, vineData.teleport_coords, vineData.camera_coords,
+                                       vineData.y,
+                                       vineData.reset_location,
+                                       vineData.camera_max, 
+                                       Level:convertBGColorTextToType(vineData.bg_color),
+                                       Level:convertLevelTextToType(vineData.level_type), 
+                                       vineParts)
+        vineTop:give('foreground')
+        table.insert(vineParts, vineTop)
+        vineLength = vineLength + 1
+
+        --[[
+            Periodically waits until the bottom of the vine has moved past the block, and then
+            adds another piece to the vine.
+            This keeps happening until the vine has fully grown
+        ]]
+        local vineGrowController = Concord.entity(self.world)
+        vineGrowController:give('wait_until_component', 
+        function(entity)
+            local position = originalBlock.position
+            return vineParts[#vineParts].position:getBottom() <= position:getTop()
+        end,
+        function(entity)
+            local position = originalBlock.position
+            --Adds another part to the vine
+            if vineLength < 6 then
+                local vinePiece = Concord.entity(self.world)
+                vinePiece:give('position', {x = position.position.x, y = position.position.y}, {x = SCALED_CUBE_SIZE, y = SCALED_CUBE_SIZE})
+                vinePiece:give('texture', BLOCK_TILESHEET_IMG)
+                vinePiece:give('spritesheet', vinePiece.texture, ORIGINAL_CUBE_SIZE, ORIGINAL_CUBE_SIZE, 1, 1, 1, ORIGINAL_CUBE_SIZE,
+                                                                 ORIGINAL_CUBE_SIZE, MapInstance:getBlockCoord(vineBodyID))
+                vinePiece:give('moving_component', {x = 0, y = -1}, {x = 0, y = 0})
+                vinePiece:give('move_outside_camera_component')
+                vinePiece:give('friction_exempt_component')
+                vinePiece:give('collision_exempt_component')
+                vinePiece:give('vine_component', vineData.vine_coords, vineData.teleport_coords, vineData.camera_coords,
+                                                 vineData.y,
+                                                 vineData.reset_location,
+                                                 vineData.camera_max, 
+                                                 Level:convertBGColorTextToType(vineData.bg_color),
+                                                 Level:convertLevelTextToType(vineData.level_type), 
+                                                 vineParts)
+                
+                vinePiece:give('foreground')
+                table.insert(vineParts, vinePiece)
+                vineLength = vineLength + 1
+                --If the vine is fully grown and the last vine is no longer in the block
+            elseif vineParts[#vineParts].position:getBottom() < position:getTop() then
+                for _, e in ipairs(vineParts) do
+                    e.moving_component.velocity.y = 0
+                end
+                vineGrowController:remove('wait_until_component')
+                self.world:removeEntity(vineGrowController)
+            end
+        end)
     end
 end
 

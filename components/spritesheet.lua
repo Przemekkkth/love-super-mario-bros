@@ -51,6 +51,12 @@ function SpritesheetComponent:setEntityHeight(newEntityHeight)
     self.quad = love.graphics.newQuad(self.sourceRect.x, self.sourceRect.y, self.sourceRect.w, self.sourceRect.h, self.texture:getTexture())
 end
 
+function SpritesheetComponent:setEntityWidth(newEntityWidth)
+    self.entityWidth = newEntityWidth
+    self.sourceRect.w = self.entityWidth
+    self.quad = love.graphics.newQuad(self.sourceRect.x, self.sourceRect.y, self.sourceRect.w, self.sourceRect.h, self.texture:getTexture())
+end
+
 function SpritesheetComponent:setGridHeight(newGridHeight)
     self.gridHeight = newGridHeight
     self.sourceRect.y = self.yOffset + ((self.spritesheetCoordinates.y) * self.gridGapHeight) +
