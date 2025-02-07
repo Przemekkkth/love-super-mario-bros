@@ -56,6 +56,9 @@ function MapSystem:createUndergroundEntities()
         for x = 1, mapWidth do
             local entityID = undergroundMap:getLevelData()[y][x]
             local referenceID = self:getReferenceBlockID(entityID)
+            if self.scene:getLevelData():getLevelType() == LEVEL_TYPE.START_UNDERGROUND then
+                self:createInvisibleBlock(x, y, referenceID)
+            end
             self:createForegroundEntity(x, y, entityID, referenceID)
         end
     end
@@ -70,7 +73,9 @@ function MapSystem:createForegroundEntities()
         for x = 1, mapWidth do
             local entityID = foregroundMap:getLevelData()[y][x]
             local referenceID = self:getReferenceBlockID(entityID)
-            self:createInvisibleBlock(x, y, referenceID)
+            if self.scene:getLevelData():getLevelType() ~= LEVEL_TYPE.START_UNDERGROUND then
+                self:createInvisibleBlock(x, y, referenceID)
+            end
             self:createForegroundEntity(x, y, entityID, referenceID)
         end
     end
