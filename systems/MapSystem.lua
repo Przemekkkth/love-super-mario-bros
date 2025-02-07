@@ -1775,6 +1775,10 @@ function MapSystem:getReferenceEnemyIDAsEntity(entityID, referenceID)
     local referenceCoordinateX = referenceCoordinates.x
     local referenceCoordinateY = referenceCoordinates.y
 
+    if entityCoordinateY > 2 and entityCoordinateY < 12 then
+        referenceCoordinateY = referenceCoordinateY + (entityCoordinateY - (entityCoordinateY % 3))
+    end
+    
     for key, enemyIDCoord in ipairs(MapInstance:getEnemyIDCoordinates()) do
         if (enemyIDCoord.x == referenceCoordinateX) and (enemyIDCoord.y == referenceCoordinateY) then
             return key
