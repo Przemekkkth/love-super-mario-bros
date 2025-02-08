@@ -21,6 +21,7 @@ function PlayerSystem:init(world) --onAddedToWorld(world))
     self.jumpHeld = 0
     self.underwater = false
     self.underwaterControllerX = PIDController(0.20, 0, 0.02, 60)
+    self.MIN_UNDERWATER_Y = 640
 end
 
 function PlayerSystem:update()
@@ -740,6 +741,11 @@ function PlayerSystem:updateWaterVelocity()
                                                     self.currentState = ANIMATION_STATE.SWIMMING
                                                     entity:remove('wait_until_component')
                                                 end)
+    end
+
+    if self.mario.position.position.y <= self.MIN_UNDERWATER_Y then
+        move.velocity.y = 0
+        self.mario.position.position.y = self.MIN_UNDERWATER_Y
     end
 end
 
