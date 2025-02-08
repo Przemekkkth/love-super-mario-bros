@@ -222,7 +222,7 @@ function PlayerSystem:update()
                     world:removeEntity(collectible)
                 elseif type == COLLECTIBLE_TYPE.ONE_UP then
                     local coinSound = Concord.entity(world)
-                    coinSound:give('sound_component', SOUND_ID.COIN)
+                    coinSound:give('sound_component', SOUND_ID.ONE_UP)
                     self:grow(type)
                     world:removeEntity(collectible)
                     world:getSystem(ScoreSystem):increaseLives()
