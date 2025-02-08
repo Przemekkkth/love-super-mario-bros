@@ -707,7 +707,7 @@ function MapSystem:dispenseCoin(entityID)
     return function(originalBlock)
         local coinSound = Concord.entity(self.world)
         coinSound:give('sound_component', SOUND_ID.COIN)
-        local addScore = Concord.entity(world)
+        local addScore = Concord.entity(self.world)
         addScore:give('add_score_component', 100, true)
 
         local floatingText = Concord.entity(self.world)
