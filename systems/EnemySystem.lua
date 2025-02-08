@@ -157,6 +157,10 @@ function EnemySystem:update()
     end
 end
 
+function EnemySystem:setScene(scene)
+    self.scene = scene
+end
+
 function EnemySystem:performBowserActions(entity)
     local world = self:getWorld()
     if not CameraInstance:inCameraRange(entity.position) or entity:has('frozen_component') or entity:has('dead_component') then
@@ -223,8 +227,11 @@ function EnemySystem:performBowserActions(entity)
     end
 
     if bowserComponent.lastAttackTime >= MAX_FPS * 2 then
-        local attackSelect = math.random(1, #bowserComponent.attacks)
+        local attackSelect = 1
         local hammerAmount = math.random(6, 10)
+        if self.scene:getLevel() >= 4 then
+            attackSelect = math.random(1, #bowserComponent.attacks)
+        end
         bowserComponent.attacks[attackSelect](entity, hammerAmount);
     end
 end

@@ -439,8 +439,8 @@ function GameScene:setupLevel()
         self.world:getSystem(PlayerSystem):setPlayerState(newMarioState)
     end
 
+    self.world:getSystem(EnemySystem):setScene(self)
     self.world:getSystem(FlagSystem):setScene(self)
-
     self.world:getSystem(WarpSystem):setScene(self)
 
     self.world:getSystem(CallbackSystem):setEnabled(false)

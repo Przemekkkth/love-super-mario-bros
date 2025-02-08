@@ -1515,7 +1515,9 @@ function MapSystem:createBowser(x, y, entityID)
                 blastSound:give('sound_component', SOUND_ID.BOWSER_FIRE)
 
                 local fireBlast = Concord.entity(self.world)
-                fireBlast:give('position', {x = 0, y = position:getTop() + 4},
+                local fireBastYPoses = {position:getTop() + 4, position:getTop() + SCALED_CUBE_SIZE + 4}
+                local randomYPos = math.random(1, 2);
+                fireBlast:give('position', {x = 0, y = fireBastYPoses[randomYPos]},
                                            {x = 1.5*SCALED_CUBE_SIZE, y = 0.5*SCALED_CUBE_SIZE })
                 local blastPosition = fireBlast.position
                 fireBlast:give('texture', ENEMY_TILESHEET_IMG)
