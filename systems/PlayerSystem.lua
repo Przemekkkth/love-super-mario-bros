@@ -225,6 +225,7 @@ function PlayerSystem:update()
                     coinSound:give('sound_component', SOUND_ID.COIN)
                     self:grow(type)
                     world:removeEntity(collectible)
+                    world:getSystem(ScoreSystem):increaseLives()
                 end
             end
         end

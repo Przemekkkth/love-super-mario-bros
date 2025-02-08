@@ -228,6 +228,11 @@ function ScoreSystem:decreaseLives()
     self.livesText.text:setText(' x  '..tostring(self.lives))
 end
 
+function ScoreSystem:increaseLives()
+    self.lives = self.lives + 1
+    self.livesText.text:setText(' x  '..tostring(self.lives))
+end
+
 function ScoreSystem:scoreCountdown(world)
     if self.gameTime <= 0 then
         self.gameTime = 0
