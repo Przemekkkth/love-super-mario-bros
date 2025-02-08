@@ -24,8 +24,6 @@ function VineCommand:new(scene, world, vine)
             CameraInstance:setCameraX(vineComponent.cameraCoordinates[1] * SCALED_CUBE_SIZE)
             CameraInstance:setCameraY(vineComponent.cameraCoordinates[2] * SCALED_CUBE_SIZE)
 
-            --warpSystem:setTeleportBackgroundColor(TextureManager::Get().getBackgroundColor)
-            --TextureManager::Get().SetBackgroundColor(vineComponent->newBackgroundColor);
             warpSystem:setTeleportLevelType(scene:getLevelData().levelType)
             scene:setCurrentLevelType(scene:getLevelData().levelType)
             scene:setLevelMusic(vineComponent.newLevelType)
@@ -36,7 +34,7 @@ function VineCommand:new(scene, world, vine)
             end
             -- Sets mario's position to be at the bottom of the vine
             playerPosition:setTop(vineParts[#vineParts].position:getTop())
-            playerPosition:setLeft(vineParts[#vineParts].position:getRight() - SCALED_CUBE_SIZE / 2)
+
         end),
         -- Wait until the vine has fully moved up, and then stop the vines from growing more
         WaitUntilCommand(function() 
