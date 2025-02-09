@@ -84,6 +84,12 @@ function ScoreSystem:update()
 
             if score.addCoin then
                 self.coins = self.coins + 1
+                if self.coins >= 100 then
+                    local coinSound = Concord.entity(world)
+                    coinSound:give('sound_component', SOUND_ID.ONE_UP)
+                    self:increaseLives()
+                    self.coins = 0
+                end
                 changeCoin = true
             end
 
@@ -225,6 +231,11 @@ end
 
 function ScoreSystem:decreaseLives()
     self.lives = self.lives - 1
+    self.livesText.text:setText(' x  '..tostring(self.lives))
+end
+
+function ScoreSystem:increaseLives()
+    self.lives = self.lives + 1
     self.livesText.text:setText(' x  '..tostring(self.lives))
 end
 

@@ -56,6 +56,9 @@ function MapSystem:createUndergroundEntities()
         for x = 1, mapWidth do
             local entityID = undergroundMap:getLevelData()[y][x]
             local referenceID = self:getReferenceBlockID(entityID)
+            if self.scene:getLevelData():getLevelType() == LEVEL_TYPE.START_UNDERGROUND then
+                self:createInvisibleBlock(x, y, referenceID)
+            end
             self:createForegroundEntity(x, y, entityID, referenceID)
         end
     end
@@ -70,7 +73,9 @@ function MapSystem:createForegroundEntities()
         for x = 1, mapWidth do
             local entityID = foregroundMap:getLevelData()[y][x]
             local referenceID = self:getReferenceBlockID(entityID)
-            self:createInvisibleBlock(x, y, referenceID)
+            if self.scene:getLevelData():getLevelType() ~= LEVEL_TYPE.START_UNDERGROUND then
+                self:createInvisibleBlock(x, y, referenceID)
+            end
             self:createForegroundEntity(x, y, entityID, referenceID)
         end
     end
@@ -702,7 +707,7 @@ function MapSystem:dispenseCoin(entityID)
     return function(originalBlock)
         local coinSound = Concord.entity(self.world)
         coinSound:give('sound_component', SOUND_ID.COIN)
-        local addScore = Concord.entity(world)
+        local addScore = Concord.entity(self.world)
         addScore:give('add_score_component', 100, true)
 
         local floatingText = Concord.entity(self.world)
@@ -1232,7 +1237,13 @@ function MapSystem:createBlooper(x, y, entityID)
         if not CameraInstance:inCameraRange(position) then
             return
         end
-
+        if entity:has('dead_component') then
+            entity:remove('callback_component')
+            entity:remove('timer_component')
+            move.velocity.y = 0
+            move.acceleration.y = 0
+            return
+        end
         entity:remove('gravity_component')
         move.acceleration.y = 0
 
@@ -1510,7 +1521,9 @@ function MapSystem:createBowser(x, y, entityID)
                 blastSound:give('sound_component', SOUND_ID.BOWSER_FIRE)
 
                 local fireBlast = Concord.entity(self.world)
-                fireBlast:give('position', {x = 0, y = position:getTop() + 4},
+                local fireBastYPoses = {position:getTop() + 4, position:getTop() + SCALED_CUBE_SIZE + 4}
+                local randomYPos = math.random(1, 2);
+                fireBlast:give('position', {x = 0, y = fireBastYPoses[randomYPos]},
                                            {x = 1.5*SCALED_CUBE_SIZE, y = 0.5*SCALED_CUBE_SIZE })
                 local blastPosition = fireBlast.position
                 fireBlast:give('texture', ENEMY_TILESHEET_IMG)
@@ -1775,6 +1788,10 @@ function MapSystem:getReferenceEnemyIDAsEntity(entityID, referenceID)
     local referenceCoordinateX = referenceCoordinates.x
     local referenceCoordinateY = referenceCoordinates.y
 
+    if entityCoordinateY > 2 and entityCoordinateY < 12 then
+        referenceCoordinateY = referenceCoordinateY + (entityCoordinateY - (entityCoordinateY % 3))
+    end
+    
     for key, enemyIDCoord in ipairs(MapInstance:getEnemyIDCoordinates()) do
         if (enemyIDCoord.x == referenceCoordinateX) and (enemyIDCoord.y == referenceCoordinateY) then
             return key

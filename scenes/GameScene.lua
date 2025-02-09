@@ -20,7 +20,7 @@ function GameScene:new(level, subLevel)
 
     self.world = Concord.world()
     self.world:addSystems(RenderSystem, ScoreSystem, AnimationSystem, MapSystem, PlayerSystem, FlagSystem, WarpSystem, PhysicsSystem, CallbackSystem, CollectibleSystem, EnemySystem, SoundSystem)
-    self.world:addSystems(BackgroundSystem, ForegroundSystem, AboveForegroundSystem, ProjectileSystem, ParticleSystem)
+    self.world:addSystems(BackgroundSystem, ForegroundSystem, AboveForegroundSystem, ProjectileSystem, ParticleSystem, BlockBumpSystem, FireBarSystem, MovingPlatformSystem, PlatformLevelSystem)
     self.pauseText = Concord.entity(self.pauseWorld)
     self.pauseText:give('position', {x = 10.8 * SCALED_CUBE_SIZE, y = 4 * SCALED_CUBE_SIZE})
     self.pauseText:give('text', 'PAUSED', 18, false, false)
@@ -439,8 +439,8 @@ function GameScene:setupLevel()
         self.world:getSystem(PlayerSystem):setPlayerState(newMarioState)
     end
 
+    self.world:getSystem(EnemySystem):setScene(self)
     self.world:getSystem(FlagSystem):setScene(self)
-
     self.world:getSystem(WarpSystem):setScene(self)
 
     self.world:getSystem(CallbackSystem):setEnabled(false)

@@ -55,17 +55,23 @@ function WarpSystem:update()
         if entity:has('vine_component') and entity:has('position') then
             local vine = entity
             local player = self.world:getSystem(PlayerSystem):getMario()
+            local warpSystem = self.world:getSystem(WarpSystem) 
     
             playerPosition = player.position
             playerMove     = player.moving_component
-            if not AABBTotalCollision(playerPosition, vine.position) or (WarpSystem:isClimbing() and playerMove.velocity.y ~= 0) then
+            if not AABBTotalCollision(playerPosition, vine.position) or (warpSystem:isClimbing() and playerMove.velocity.y ~= 0) then
             else
                 player:give('collision_exempt_component')
                 player:give('friction_exempt_component')
                 player:remove('gravity_component')
         
-                player.texture:setHorizontalFlipped(true)
-                playerPosition:setLeft(entity.position:getRight() - SCALED_CUBE_SIZE / 2)
+                if playerPosition.position.x > entity.position.position.x + SCALED_CUBE_SIZE / 2 then
+                    player.texture:setHorizontalFlipped(true)
+                    playerPosition:setLeft(entity.position:getRight() - SCALED_CUBE_SIZE / 2)
+                else
+                    playerPosition:setRight(entity.position:getLeft() + SCALED_CUBE_SIZE / 2)
+                end
+
                 WarpSystem:setClimbing(true)
                 PlayerSystem:enableInput(false)
         

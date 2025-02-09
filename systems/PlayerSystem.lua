@@ -21,6 +21,7 @@ function PlayerSystem:init(world) --onAddedToWorld(world))
     self.jumpHeld = 0
     self.underwater = false
     self.underwaterControllerX = PIDController(0.20, 0, 0.02, 60)
+    self.MIN_UNDERWATER_Y = 640
 end
 
 function PlayerSystem:update()
@@ -222,9 +223,10 @@ function PlayerSystem:update()
                     world:removeEntity(collectible)
                 elseif type == COLLECTIBLE_TYPE.ONE_UP then
                     local coinSound = Concord.entity(world)
-                    coinSound:give('sound_component', SOUND_ID.COIN)
+                    coinSound:give('sound_component', SOUND_ID.ONE_UP)
                     self:grow(type)
                     world:removeEntity(collectible)
+                    world:getSystem(ScoreSystem):increaseLives()
                 end
             end
         end
@@ -684,7 +686,7 @@ function PlayerSystem:updateWaterVelocity()
     local move = self.mario.moving_component
     local texture = self.mario.texture
 
-    if self.mario:has('friction_exempt_component') then
+    if not self.mario:has('friction_exempt_component') then
         self.mario:give('friction_exempt_component')
     end
 
@@ -739,6 +741,11 @@ function PlayerSystem:updateWaterVelocity()
                                                     self.currentState = ANIMATION_STATE.SWIMMING
                                                     entity:remove('wait_until_component')
                                                 end)
+    end
+
+    if self.mario.position.position.y <= self.MIN_UNDERWATER_Y then
+        move.velocity.y = 0
+        self.mario.position.position.y = self.MIN_UNDERWATER_Y
     end
 end
 
