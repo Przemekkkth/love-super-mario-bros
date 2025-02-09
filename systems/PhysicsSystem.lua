@@ -172,7 +172,7 @@ function PhysicsSystem:update()
             local collidedDirectionVertical
             local collidedDirectionHorizontal
 
-            if entity:has('collision_exempt_component') or entity:has('invisible_block_component') then
+            if entity:has('collision_exempt_component') or other:has('invisible_block_component') then
                 collidedDirectionVertical = checkCollisionY(other, position, move, false)
                 collidedDirectionHorizontal = checkCollisionX(other, position, move, false)
             else
@@ -188,19 +188,18 @@ function PhysicsSystem:update()
                     move.velocity.x = 0.0
                     move.acceleration.x = 0.0
                 end
+            end
 
-                if collidedDirectionVertical == COLLISION_DIRECTION.TOP then
-                    entity:give('top_collision_component')
-                elseif collidedDirectionVertical == COLLISION_DIRECTION.BOTTOM then
-                    entity:give('bottom_collision_component')
-                end
+            if collidedDirectionVertical == COLLISION_DIRECTION.TOP then
+                entity:give('top_collision_component')
+            elseif collidedDirectionVertical == COLLISION_DIRECTION.BOTTOM then
+                entity:give('bottom_collision_component')
+            end
 
-                if collidedDirectionHorizontal == COLLISION_DIRECTION.LEFT then
-                    entity:give('left_collision_component')
-                elseif collidedDirectionHorizontal == COLLISION_DIRECTION.RIGHT then
-                    entity:give('right_collision_component')
-                end
-                
+            if collidedDirectionHorizontal == COLLISION_DIRECTION.LEFT then
+                entity:give('left_collision_component')
+            elseif collidedDirectionHorizontal == COLLISION_DIRECTION.RIGHT then
+                entity:give('right_collision_component')
             end
         end)
 
