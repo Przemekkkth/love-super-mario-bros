@@ -1237,7 +1237,13 @@ function MapSystem:createBlooper(x, y, entityID)
         if not CameraInstance:inCameraRange(position) then
             return
         end
-
+        if entity:has('dead_component') then
+            entity:remove('callback_component')
+            entity:remove('timer_component')
+            move.velocity.y = 0
+            move.acceleration.y = 0
+            return
+        end
         entity:remove('gravity_component')
         move.acceleration.y = 0
 
