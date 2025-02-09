@@ -108,19 +108,21 @@ function PhysicsSystem:update()
     end)
 
     --Change the y position of the block being bumped
-    processEntitiesWithComponents(world, {'block_bump_component', 'position'},
-    function(entity) 
-        local blockBump = entity.block_bump_component
-        if blockBump.yChanges == nil then
-            entity:remove('block_bump_component')
-            return
+    local blockBumps = world:getSystem(BlockBumpSystem):getEntities()
+    for _, entity in ipairs(blockBumps) do
+        if entity:has('position') then 
+            local blockBump = entity.block_bump_component
+            if blockBump.yChanges == nil then
+                entity:remove('block_bump_component')
+                return
+            end
+            entity.position.position.y = entity.position.position.y + blockBump.yChanges[blockBump.yChangeIndex]
+            blockBump.yChangeIndex = blockBump.yChangeIndex + 1
+            if blockBump.yChangeIndex > #blockBump.yChanges then
+                entity:remove('block_bump_component')
+            end
         end
-        entity.position.position.y = entity.position.position.y + blockBump.yChanges[blockBump.yChangeIndex]
-        blockBump.yChangeIndex = blockBump.yChangeIndex + 1
-        if blockBump.yChangeIndex > #blockBump.yChanges then
-            entity:remove('block_bump_component')
-        end
-    end)
+    end
 
     --Main Physics update loop
     processEntitiesWithComponents(world, {'moving_component', 'position'},
@@ -224,11 +226,10 @@ end
 
 function PhysicsSystem:updateFireBars() 
     local world = self:getWorld()
-    processEntitiesWithComponents(world, {'fire_bar_component', 'position'},
-    function(entity)
+    local fireBars = world:getSystem(FireBarSystem):getEntities()
+    for _, entity in ipairs(fireBars) do
         local fireBar = entity.fire_bar_component
         local position = entity.position
-
         if fireBar.barAngle > 360 then
             fireBar.barAngle = fireBar.barAngle - 360
         elseif fireBar.barAngle < 0 then
@@ -237,13 +238,13 @@ function PhysicsSystem:updateFireBars()
 
         position.position.x = fireBar:calculateXPosition(fireBar.barAngle) + fireBar.pointOfRotation.x 
         position.position.y = -fireBar:calculateYPosition(fireBar.barAngle) + fireBar.pointOfRotation.y
-    end)
+    end
 end
  
 function PhysicsSystem:updateMovingPlatforms() 
     local world = self:getWorld()
-    processEntitiesWithComponents(world, {'moving_platform_component', 'moving_component', 'position'},
-    function(entity)
+    local movingPlatforms = world:getSystem(MovingPlatformSystem):getEntities()
+    for _, entity in ipairs(movingPlatforms) do
         local platform = entity.moving_platform_component
         local platformMove = entity.moving_component
         local position = entity.position
@@ -304,63 +305,58 @@ function PhysicsSystem:updateMovingPlatforms()
 
             entity:remove('top_collision_component')
         end
-    end)
+    end
 end
  
 function PhysicsSystem:updatePlatformLevels() 
     local world = self:getWorld()
-    processEntitiesWithComponents(world, {'platform_level_component'},
-    function(entity)
+
+    local platformLevels = world:getSystem(PlatformLevelSystem):getEntities()
+    for _, entity in ipairs(platformLevels) do
         local platformLevel = entity.platform_level_component
         local platformPosition = entity.position
         local platformMove = entity.moving_component
 
-        if not CameraInstance:inCameraRange(platformPosition) then
-            return
-        end
-
-        local linePosition = platformLevel.pulleyLine.position
-        linePosition.scale.y = platformPosition:getTop() - linePosition:getTop()
-        local otherPlatform = platformLevel:getOtherPlatform()
-
-        -- If the level reaches max height
-        if platformPosition:getTop() < platformLevel.pulleyHeight then
-            platformPosition:setTop(platformLevel.pulleyHeight)
-            platformMove.velocity.x = 0
-            platformMove.velocity.y = 0
-
-            otherPlatform.moving_component.acceleration.y = 0
-            otherPlatform:give('gravity_component')
-            otherPlatform:give('collision_exempt_component')
-            otherPlatform:give('destroy_outside_camera_component')
-
-            otherPlatform:remove('platform_level_component')
-            entity:remove('platform_level_component')
-            return
-        end
-
-        if not entity:has('top_collision_component') then
-            --Slows the platform down if the other platform isn't accelerating
-            if otherPlatform.moving_component.acceleration.y == 0 then
-                platformMove.velocity.y = platformMove.velocity.y * 0.92
+        if CameraInstance:inCameraRange(platformPosition) and platformLevel then
+            local linePosition = platformLevel.pulleyLine.position
+            linePosition.scale.y = platformPosition:getTop() - linePosition:getTop()
+            local otherPlatform = platformLevel:getOtherPlatform()
+            -- If the level reaches max height
+            if platformPosition:getTop() < platformLevel.pulleyHeight then
+                platformPosition:setTop(platformLevel.pulleyHeight)
+                platformMove.velocity.x = 0
+                platformMove.velocity.y = 0
+    
+                otherPlatform.moving_component.acceleration.y = 0
+                otherPlatform:give('gravity_component')
+                otherPlatform:give('collision_exempt_component')
+                otherPlatform:give('destroy_outside_camera_component')
+    
+                otherPlatform:remove('platform_level_component')
+                entity:remove('platform_level_component')
+            elseif not entity:has('top_collision_component') then
+                --Slows the platform down if the other platform isn't accelerating
+                if otherPlatform.moving_component.acceleration.y == 0 then
+                    platformMove.velocity.y = platformMove.velocity.y * 0.92
+                    -- Sets the 2 platforms to have opposite velocities
+                    otherPlatform.moving_component.velocity.y = -platformMove.velocity.y
+                end
+    
+                platformMove.acceleration.y = 0
+            else
+                platformMove.acceleration.y = 0.12
                 -- Sets the 2 platforms to have opposite velocities
                 otherPlatform.moving_component.velocity.y = -platformMove.velocity.y
+                -- NEW CODE
+                if platformMove.velocity.y > 1 then
+                    platformMove.velocity.y = 1
+                elseif platformMove.velocity.y < -1 then
+                    platformMove.velocity.y = -1
+                end
+                --END NEW CODE
+                entity:remove('top_collision_component')
             end
-
-            platformMove.acceleration.y = 0
-            return
         end
 
-        platformMove.acceleration.y = 0.12
-        -- Sets the 2 platforms to have opposite velocities
-        otherPlatform.moving_component.velocity.y = -platformMove.velocity.y
-        -- NEW CODE
-        if platformMove.velocity.y > 1 then
-            platformMove.velocity.y = 1
-        elseif platformMove.velocity.y < -1 then
-            platformMove.velocity.y = -1
-        end
-        --END NEW CODE
-        entity:remove('top_collision_component')
-    end)
+    end
 end
