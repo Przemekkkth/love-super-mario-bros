@@ -686,7 +686,7 @@ function PlayerSystem:updateWaterVelocity()
     local move = self.mario.moving_component
     local texture = self.mario.texture
 
-    if self.mario:has('friction_exempt_component') then
+    if not self.mario:has('friction_exempt_component') then
         self.mario:give('friction_exempt_component')
     end
 
