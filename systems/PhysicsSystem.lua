@@ -108,7 +108,7 @@ function PhysicsSystem:update()
     end)
 
     --Change the y position of the block being bumped
-    local blockBumps = world:getSystem(BlockBumpSystem):getEntities()
+    local blockBumps = world:getSystem(FilterSystem):getBlockBumpEntities()
     for _, entity in ipairs(blockBumps) do
         if entity:has('position') then 
             local blockBump = entity.block_bump_component
@@ -226,7 +226,7 @@ end
 
 function PhysicsSystem:updateFireBars() 
     local world = self:getWorld()
-    local fireBars = world:getSystem(FireBarSystem):getEntities()
+    local fireBars = world:getSystem(FilterSystem):getFireBarEntities()
     for _, entity in ipairs(fireBars) do
         local fireBar = entity.fire_bar_component
         local position = entity.position
@@ -243,7 +243,7 @@ end
  
 function PhysicsSystem:updateMovingPlatforms() 
     local world = self:getWorld()
-    local movingPlatforms = world:getSystem(MovingPlatformSystem):getEntities()
+    local movingPlatforms = world:getSystem(FilterSystem):getMovingPlatformEntities()
     for _, entity in ipairs(movingPlatforms) do
         local platform = entity.moving_platform_component
         local platformMove = entity.moving_component
@@ -311,7 +311,7 @@ end
 function PhysicsSystem:updatePlatformLevels() 
     local world = self:getWorld()
 
-    local platformLevels = world:getSystem(PlatformLevelSystem):getEntities()
+    local platformLevels = world:getSystem(FilterSystem):getPlatformLevelEntities()
     for _, entity in ipairs(platformLevels) do
         local platformLevel = entity.platform_level_component
         local platformPosition = entity.position

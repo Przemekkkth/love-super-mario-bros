@@ -6,7 +6,7 @@ function GameOverScene:new(level, subLevel)
     CameraInstance:setCameraY(0)
 
     self.world = Concord.world()
-    self.world:addSystems(SoundSystem, RenderSystem)
+    self.world:addSystems(SoundSystem, RenderSystem, FilterSystem)
 
     self.gameOverText = Concord.entity(self.world)
     self.gameOverText:give('position', {x = 10 * SCALED_CUBE_SIZE, y = 6.5 * SCALED_CUBE_SIZE})

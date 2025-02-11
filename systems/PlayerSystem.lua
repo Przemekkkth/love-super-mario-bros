@@ -144,8 +144,8 @@ function PlayerSystem:update()
     self:checkEnemyCollisions()
 
     -- Projectile Collision
-    local projectiles = world:getSystem(ProjectileSystem):getEntities()
-    for _, projectile in ipairs(projectiles) do
+    local filterSystem = world:getSystem(FilterSystem)
+    for _, projectile in ipairs(filterSystem:getProjectileEntities()) do
         local projectilePosition = projectile.position
         if projectile:has('position') then
             if (not CameraInstance:inCameraRange(projectilePosition)) or (not AABBTotalCollision(position, projectilePosition) or self:isSuperStar() or (self.mario:has('ending_blink_component') or self.mario:has('frozen_component') or self.mario:has('particle'))) then

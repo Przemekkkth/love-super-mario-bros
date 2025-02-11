@@ -6,7 +6,7 @@ function EnemySystem:update()
     end
 
     local world = self:getWorld()
-    local projectiles = world:getSystem(ProjectileSystem):getEntities()
+    local projectiles = world:getSystem(FilterSystem):getProjectileEntities()
     for _, entity in ipairs(projectiles) do
         if entity:has('position') and entity:has('moving_component') then
             if entity.projectile.type == PROJECTTILE_TYPE.FIREBALL then
@@ -69,7 +69,7 @@ function EnemySystem:update()
             end
 
             -- Enemy + Projectile collisions
-            local projectiles = world:getSystem(ProjectileSystem):getEntities()
+            local projectiles = world:getSystem(FilterSystem):getProjectileEntities()
             for _, projectile in ipairs(projectiles) do
                 if projectile:has('moving_component') then
                     local projectilePosition = projectile.position

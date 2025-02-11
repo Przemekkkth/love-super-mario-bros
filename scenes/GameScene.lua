@@ -16,11 +16,12 @@ function GameScene:new(level, subLevel)
     self.collectiblesMap = Map()
 
     self.pauseWorld = Concord.world()
-    self.pauseWorld:addSystems(RenderSystem)
+    self.pauseWorld:addSystems(FilterSystem, RenderSystem)
 
     self.world = Concord.world()
-    self.world:addSystems(RenderSystem, ScoreSystem, AnimationSystem, MapSystem, PlayerSystem, FlagSystem, WarpSystem, PhysicsSystem, CallbackSystem, CollectibleSystem, EnemySystem, SoundSystem)
-    self.world:addSystems(BackgroundSystem, ForegroundSystem, AboveForegroundSystem, ProjectileSystem, ParticleSystem, BlockBumpSystem, FireBarSystem, MovingPlatformSystem, PlatformLevelSystem)
+    self.world:addSystems(AnimationSystem, CallbackSystem, CollectibleSystem, EnemySystem, FilterSystem, FlagSystem, MapSystem, PhysicsSystem, PlayerSystem, RenderSystem, ScoreSystem, SoundSystem, WarpSystem)
+
+    
     self.pauseText = Concord.entity(self.pauseWorld)
     self.pauseText:give('position', {x = 10.8 * SCALED_CUBE_SIZE, y = 4 * SCALED_CUBE_SIZE})
     self.pauseText:give('text', 'PAUSED', 18, false, false)
