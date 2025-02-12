@@ -10,7 +10,10 @@ FilterSystem = Concord.system({
     platform_level = {'platform_level_component'},
     floating_text = {'floating_text'},
     icon = {'icon'},
-    text = {'text'}
+    text = {'text'},
+    create_floating_text = {'create_floating_text_component'},
+    add_score = {'add_score_component'},
+    add_lives = {'add_lives_component'}
 })
 
 function FilterSystem:getBackgroundEntities()
@@ -59,4 +62,16 @@ end
 
 function FilterSystem:getTextEntities()
     return self.text
+end
+
+function FilterSystem:getCreateFloatingTextEntities()
+    return self.create_floating_text
+end
+
+function FilterSystem:getAddScoreEntities()
+    return self.add_score
+end
+
+function FilterSystem:getAddLivesEntities()
+    return self.add_lives
 end

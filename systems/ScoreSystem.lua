@@ -67,16 +67,15 @@ function ScoreSystem:update()
     local changeCoin = false
     local changeTime = false
     local world = self:getWorld()
+    local filterSystem = world:getSystem(FilterSystem)
+    for _, entity in ipairs(filterSystem:getCreateFloatingTextEntities()) do
+        local floatingText = entity.create_floating_text_component
+        self:createFloatingText(world, floatingText.originalEntity, floatingText.text)
+        world:removeEntity(entity)
+    end
 
-    for _, entity in ipairs(world:getEntities()) do
-        if entity:has('create_floating_text_component') then
-            local floatingText = entity.create_floating_text_component
-            self:createFloatingText(world, floatingText.originalEntity, floatingText.text)
-            world:removeEntity(entity)
-        end
-
-        if entity:has('add_score_component') then
-            local score = entity.add_score_component
+    for _, entity in ipairs(filterSystem:getAddScoreEntities()) do 
+        local score = entity.add_score_component
             if score.score > 0 then
                 self.totalScore = self.totalScore + score.score
                 changeScore = true
@@ -94,13 +93,12 @@ function ScoreSystem:update()
             end
 
             world:removeEntity(entity)
-        end
+    end
 
-        if entity:has('add_lives_component') then
-            local livesComponent = entity.add_lives_component
-            self.lives = self.lives + 1       
-            world:removeEntity(entity)
-        end
+    for _, entity in ipairs(filterSystem:getAddLivesEntities()) do
+        local livesComponent = entity.add_lives_component
+        self.lives = self.lives + 1       
+        world:removeEntity(entity)
     end
 
     if self.timerRunning then
