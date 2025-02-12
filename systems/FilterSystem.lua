@@ -13,7 +13,9 @@ FilterSystem = Concord.system({
     text = {'text'},
     create_floating_text = {'create_floating_text_component'},
     add_score = {'add_score_component'},
-    add_lives = {'add_lives_component'}
+    add_lives = {'add_lives_component'},
+    sound = {'sound_component'},
+    music = {'music_component'}
 })
 
 function FilterSystem:getBackgroundEntities()
@@ -74,4 +76,12 @@ end
 
 function FilterSystem:getAddLivesEntities()
     return self.add_lives
+end
+
+function FilterSystem:getSoundEntities()
+    return self.sound
+end
+
+function FilterSystem:getMusicEntities()
+    return self.music
 end
