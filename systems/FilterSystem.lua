@@ -21,7 +21,10 @@ FilterSystem = Concord.system({
     timerPool = {'timer_component'},
     destroyDelayedPool = {'destroy_delayed_component'},
     warpPipePool = {'warp_pipe_component'},
-    vinePool = {'vine_component'}
+    vinePool = {'vine_component'},
+    flagPolePool = {'flag_pole_component'},
+    flagPool = {'flag_component'},
+    axePool = {'axe_component'}
 })
 
 function FilterSystem:getBackgroundEntities()
@@ -114,4 +117,16 @@ end
 
 function FilterSystem:getVineEntities()
     return self.vinePool
+end
+
+function FilterSystem:getFlagPoleEntities()
+    return self.flagPolePool
+end
+
+function FilterSystem:getFlagEntities()
+    return self.flagPool
+end
+
+function FilterSystem:getAxeEntities()
+    return self.axePool
 end
