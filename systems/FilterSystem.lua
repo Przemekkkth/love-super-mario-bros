@@ -16,11 +16,12 @@ FilterSystem = Concord.system({
     add_livesPool = {'add_lives_component'},
     soundPool = {'sound_component'},
     musicPool = {'music_component'},
-
     waitUntilPool = {'wait_until_component'},
     callbackPool = {'callback_component'},
     timerPool = {'timer_component'},
-    destroyDelayedPool = {'destroy_delayed_component'}
+    destroyDelayedPool = {'destroy_delayed_component'},
+    warpPipePool = {'warp_pipe_component'},
+    vinePool = {'vine_component'}
 })
 
 function FilterSystem:getBackgroundEntities()
@@ -105,4 +106,12 @@ end
 
 function FilterSystem:getDestroyDelayedEntities()
     return self.destroyDelayedPool
+end
+
+function FilterSystem:getWarpPipeEntities()
+    return self.warpPipePool
+end
+
+function FilterSystem:getVineEntities()
+    return self.vinePool
 end
