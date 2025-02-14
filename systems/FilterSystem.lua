@@ -1,87 +1,108 @@
 FilterSystem = Concord.system({ 
-    bg = { 'background' },
-    fg = {'foreground'}, 
-    above_fg = {'above_foreground'},
-    particle = {'particle'}, 
-    projectile = {'projectile'}, 
-    block_bump = {'block_bump_component'},
-    fire_bar = {'fire_bar_component'},
-    moving_platform = {'moving_platform_component'},
-    platform_level = {'platform_level_component'},
-    floating_text = {'floating_text'},
-    icon = {'icon'},
-    text = {'text'},
-    create_floating_text = {'create_floating_text_component'},
-    add_score = {'add_score_component'},
-    add_lives = {'add_lives_component'},
-    sound = {'sound_component'},
-    music = {'music_component'}
+    bgPool = { 'background' },
+    fgPool = {'foreground'}, 
+    above_fgPool = {'above_foreground'},
+    particlePool = {'particle'}, 
+    projectilePool = {'projectile'}, 
+    block_bumpPool = {'block_bump_component'},
+    fire_barPool = {'fire_bar_component'},
+    moving_platformPool = {'moving_platform_component'},
+    platform_levelPool = {'platform_level_component'},
+    floating_textPool = {'floating_text'},
+    iconPool = {'icon'},
+    textPool = {'text'},
+    create_floating_textPool = {'create_floating_text_component'},
+    add_scorePool = {'add_score_component'},
+    add_livesPool = {'add_lives_component'},
+    soundPool = {'sound_component'},
+    musicPool = {'music_component'},
+
+    waitUntilPool = {'wait_until_component'},
+    callbackPool = {'callback_component'},
+    timerPool = {'timer_component'},
+    destroyDelayedPool = {'destroy_delayed_component'}
 })
 
 function FilterSystem:getBackgroundEntities()
-    return self.bg
+    return self.bgPool
 end
 
 function FilterSystem:getForegroundEntities()
-    return self.fg
+    return self.fgPool
 end
 
 function FilterSystem:getAboveForegroundEntities()
-    return self.above_fg
+    return self.above_fgPool
 end
 
 function FilterSystem:getParticleEntities()
-    return self.particle
+    return self.particlePool
 end
 
 function FilterSystem:getProjectileEntities()
-    return self.projectile
+    return self.projectilePool
 end
 
 function FilterSystem:getBlockBumpEntities()
-    return self.block_bump
+    return self.block_bumpPool
 end
 
 function FilterSystem:getFireBarEntities()
-    return self.fire_bar
+    return self.fire_barPool
 end
 
 function FilterSystem:getMovingPlatformEntities()
-    return self.moving_platform
+    return self.moving_platformPool
 end
 
 function FilterSystem:getPlatformLevelEntities()
-    return self.platform_level
+    return self.platform_levelPool
 end
 
 function FilterSystem:getFloatingTextEntities()
-    return self.floating_text
+    return self.floating_textPool
 end
 
 function FilterSystem:getIconEntities()
-    return self.icon
+    return self.iconPool
 end
 
 function FilterSystem:getTextEntities()
-    return self.text
+    return self.textPool
 end
 
 function FilterSystem:getCreateFloatingTextEntities()
-    return self.create_floating_text
+    return self.create_floating_textPool
 end
 
 function FilterSystem:getAddScoreEntities()
-    return self.add_score
+    return self.add_scorePool
 end
 
 function FilterSystem:getAddLivesEntities()
-    return self.add_lives
+    return self.add_livesPool
 end
 
 function FilterSystem:getSoundEntities()
-    return self.sound
+    return self.soundPool
 end
 
 function FilterSystem:getMusicEntities()
-    return self.music
+    return self.musicPool
+end
+
+function FilterSystem:getWaitUntilEntities()
+    return self.waitUntilPool
+end
+
+function FilterSystem:getCallbackEntities()
+    return self.callbackPool
+end
+
+function FilterSystem:getTimerEntities()
+    return self.timerPool
+end
+
+function FilterSystem:getDestroyDelayedEntities()
+    return self.destroyDelayedPool
 end
