@@ -24,7 +24,8 @@ FilterSystem = Concord.system({
     vinePool = {'vine_component'},
     flagPolePool = {'flag_pole_component'},
     flagPool = {'flag_component'},
-    axePool = {'axe_component'}
+    axePool = {'axe_component'},
+    movingPool = {'moving_component'}
 })
 
 function FilterSystem:getBackgroundEntities()
@@ -129,4 +130,8 @@ end
 
 function FilterSystem:getAxeEntities()
     return self.axePool
+end
+
+function FilterSystem:getMovingEntities()
+    return self.movingPool
 end

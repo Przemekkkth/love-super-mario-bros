@@ -88,24 +88,23 @@ function checkCollisionX(solid, position, move, adjustPosition)
     return direction
 end
 
-function PhysicsSystem:init(world) --onAddedToWorld(world))
-end
-
 function PhysicsSystem:update()
     if not self:isEnabled() then
         return
     end
     
     local world = self:getWorld()
+    local filterSystem = world:getSystem(FilterSystem)
+
     --Update gravity for entities that have a gravity component
-    processEntitiesWithComponents(world, {'gravity_component', 'moving_component'},
-    function(entity) 
-        if not CameraInstance:inCameraRange(entity.position) and not (entity:has('move_outside_camera_component') or entity:has('player')) 
-            or entity:has('frozen_component') then
-                return
+    for _, entity in ipairs(filterSystem:getMovingEntities()) do
+        if entity:has('gravity_component') then
+            if CameraInstance:inCameraRange(entity.position) or entity:has('move_outside_camera_component') 
+                or entity:has('player') and not entity:has('frozen_component') then
+                    entity.moving_component.velocity.y = entity.moving_component.velocity.y + 0.575
+            end
         end
-        entity.moving_component.velocity.y = entity.moving_component.velocity.y + 0.575
-    end)
+    end
 
     --Change the y position of the block being bumped
     local blockBumps = world:getSystem(FilterSystem):getBlockBumpEntities()
@@ -125,94 +124,88 @@ function PhysicsSystem:update()
     end
 
     --Main Physics update loop
-    processEntitiesWithComponents(world, {'moving_component', 'position'},
-    function(entity) 
-        if entity:has('frozen_component') then
-            return
-        end
-
-        if not CameraInstance:inCameraRange(entity.position) and not (entity:has('move_outside_camera_component') or entity:has('player')) then
-            if entity:has('destroy_outside_camera_component') then
-                world:removeEntity(entity)
-            end
-
-            return
-        end
-
-        local move = entity.moving_component
-        local position = entity.position
-
-        position.position.x = position.position.x + move.velocity.x
-        position.position.y = position.position.y + move.velocity.y
-
-        move.velocity.x = move.velocity.x + move.acceleration.x
-        move.velocity.y = move.velocity.y + move.acceleration.y
+    for _, entity in ipairs(filterSystem:getMovingEntities()) do
+        if entity:has('position') then
+            if not CameraInstance:inCameraRange(entity.position) and not (entity:has('move_outside_camera_component') or entity:has('player')) then
+                if entity:has('destroy_outside_camera_component') then
+                    world:removeEntity(entity)
+                end
+            elseif not entity:has('frozen_component') then
+                local move = entity.moving_component
+                local position = entity.position
         
-        if not ( entity:has('enemy') or entity:has('collectible') ) and not entity:has('friction_exempt_component') then
-            move.velocity.x = move.velocity.x * FRICTION 
-        end
-
-        if move.velocity.x > MAX_SPEED_X then
-            move.velocity.x = MAX_SPEED_X
-        end
-
-        if move.velocity.x < -MAX_SPEED_X then
-            move.velocity.x = -MAX_SPEED_X
-        end
-
-        if move.velocity.y > MAX_SPEED_Y then
-            move.velocity.y = MAX_SPEED_Y
-        end
-
-        processEntitiesWithComponents(world, {'tile_component', 'foreground'},
-        function(other)
-            --We don't check collisions of particles
-            if entity == other or other:has('particle') or entity:has('particle') then
-                return
-            end
-
-            local collidedDirectionVertical
-            local collidedDirectionHorizontal
-
-            if entity:has('collision_exempt_component') or other:has('invisible_block_component') then
-                collidedDirectionVertical = checkCollisionY(other, position, move, false)
-                collidedDirectionHorizontal = checkCollisionX(other, position, move, false)
-            else
-                collidedDirectionVertical = checkCollisionY(other, position, move, true)
-                collidedDirectionHorizontal = checkCollisionX(other, position, move, true)
-
-                if collidedDirectionVertical ~= COLLISION_DIRECTION.NONE then
-                    move.velocity.y = 0.0
-                    move.acceleration.y = 0.0
+                position.position.x = position.position.x + move.velocity.x
+                position.position.y = position.position.y + move.velocity.y
+        
+                move.velocity.x = move.velocity.x + move.acceleration.x
+                move.velocity.y = move.velocity.y + move.acceleration.y
+                
+                if not ( entity:has('enemy') or entity:has('collectible') ) and not entity:has('friction_exempt_component') then
+                    move.velocity.x = move.velocity.x * FRICTION 
                 end
-
-                if collidedDirectionHorizontal ~= COLLISION_DIRECTION.NONE then
-                    move.velocity.x = 0.0
-                    move.acceleration.x = 0.0
+        
+                if move.velocity.x > MAX_SPEED_X then
+                    move.velocity.x = MAX_SPEED_X
+                end
+        
+                if move.velocity.x < -MAX_SPEED_X then
+                    move.velocity.x = -MAX_SPEED_X
+                end
+        
+                if move.velocity.y > MAX_SPEED_Y then
+                    move.velocity.y = MAX_SPEED_Y
+                end
+        
+                for _, other in ipairs(filterSystem:getForegroundEntities()) do
+                    if other:has('tile_component') then
+                        --We don't check collisions of particles
+                        if entity ~= other and not other:has('particle') and not entity:has('particle') then         
+                            local collidedDirectionVertical
+                            local collidedDirectionHorizontal
+        
+                            if entity:has('collision_exempt_component') or other:has('invisible_block_component') then
+                                collidedDirectionVertical = checkCollisionY(other, position, move, false)
+                                collidedDirectionHorizontal = checkCollisionX(other, position, move, false)
+                            else
+                                collidedDirectionVertical = checkCollisionY(other, position, move, true)
+                                collidedDirectionHorizontal = checkCollisionX(other, position, move, true)
+        
+                                if collidedDirectionVertical ~= COLLISION_DIRECTION.NONE then
+                                    move.velocity.y = 0.0
+                                    move.acceleration.y = 0.0
+                                end
+        
+                                if collidedDirectionHorizontal ~= COLLISION_DIRECTION.NONE then
+                                    move.velocity.x = 0.0
+                                    move.acceleration.x = 0.0
+                                end
+                            end
+        
+                            if collidedDirectionVertical == COLLISION_DIRECTION.TOP then
+                                entity:give('top_collision_component')
+                            elseif collidedDirectionVertical == COLLISION_DIRECTION.BOTTOM then
+                                entity:give('bottom_collision_component')
+                            end
+        
+                            if collidedDirectionHorizontal == COLLISION_DIRECTION.LEFT then
+                                entity:give('left_collision_component')
+                            elseif collidedDirectionHorizontal == COLLISION_DIRECTION.RIGHT then
+                                entity:give('right_collision_component')
+                            end
+                        end
+                    end
+                end
+        
+                if math.abs(move.velocity.y) < MARIO_ACCELERATION_X / 2 and move.acceleration.y == 0.0 then
+                    move.velocity.y = 0
+                end
+        
+                if math.abs(move.velocity.x) < MARIO_ACCELERATION_X / 2 and move.velocity.x == 0.0 then
+                    move.velocity.x = 0
                 end
             end
-
-            if collidedDirectionVertical == COLLISION_DIRECTION.TOP then
-                entity:give('top_collision_component')
-            elseif collidedDirectionVertical == COLLISION_DIRECTION.BOTTOM then
-                entity:give('bottom_collision_component')
-            end
-
-            if collidedDirectionHorizontal == COLLISION_DIRECTION.LEFT then
-                entity:give('left_collision_component')
-            elseif collidedDirectionHorizontal == COLLISION_DIRECTION.RIGHT then
-                entity:give('right_collision_component')
-            end
-        end)
-
-        if math.abs(move.velocity.y) < MARIO_ACCELERATION_X / 2 and move.acceleration.y == 0.0 then
-            move.velocity.y = 0
         end
-
-        if math.abs(move.velocity.x) < MARIO_ACCELERATION_X / 2 and move.velocity.x == 0.0 then
-            move.velocity.x = 0
-        end
-    end)
+    end
 
     -- Update the spinning of the fire bars
     self:updateFireBars()
