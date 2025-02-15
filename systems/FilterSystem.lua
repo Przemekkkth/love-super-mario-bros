@@ -25,7 +25,10 @@ FilterSystem = Concord.system({
     flagPolePool = {'flag_pole_component'},
     flagPool = {'flag_component'},
     axePool = {'axe_component'},
-    movingPool = {'moving_component'}
+    movingPool = {'moving_component'},
+    endingBlinkPool = {'ending_blink_component'},
+    animationPool = {'animation_component'},
+    pauseAnimationPool = {'pause_animation_component'}
 })
 
 function FilterSystem:getBackgroundEntities()
@@ -134,4 +137,16 @@ end
 
 function FilterSystem:getMovingEntities()
     return self.movingPool
+end
+
+function FilterSystem:getEndingBlinkEntities()
+    return self.endingBlinkPool
+end
+
+function FilterSystem:getAnimationEntities()
+    return self.animationPool
+end
+
+function FilterSystem:getPauseAnimationEntitites()
+    return self.pauseAnimationPool
 end
