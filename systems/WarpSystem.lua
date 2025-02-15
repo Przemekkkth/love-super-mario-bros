@@ -20,16 +20,15 @@ function WarpSystem:update()
     
     self:handleInput()
 
-    for _, entity in ipairs(self.world:getEntities()) do
-        -- Warp pipe checking
-        if entity:has('warp_pipe_component') and entity:has('position') then
+    local filterSystem = self.world:getSystem(FilterSystem)
+
+    for _, entity in ipairs(filterSystem:getWarpPipeEntities()) do
+        if entity:has('position') then
             local pipe = entity
             local warpPipe = entity.warp_pipe_component
             local player = self.world:getSystem(PlayerSystem):getMario()
 
-    
-            if not AABBCollision(pipe.position, player.position) or WarpSystem:isWarping() then
-            else
+            if AABBCollision(pipe.position, player.position) and not WarpSystem:isWarping() then
                 local playerMove = player.moving_component
                 if warpPipe.inDirection == DIRECTION.UP then
                     if self.up > 0 or playerMove.velocity.y < 0.0 then
@@ -50,17 +49,17 @@ function WarpSystem:update()
                 end 
             end
         end
+    end
 
-        --Vine checking
-        if entity:has('vine_component') and entity:has('position') then
+    for _, entity in ipairs(filterSystem:getVineEntities()) do
+        if entity:has('position') then
             local vine = entity
             local player = self.world:getSystem(PlayerSystem):getMario()
             local warpSystem = self.world:getSystem(WarpSystem) 
     
             playerPosition = player.position
             playerMove     = player.moving_component
-            if not AABBTotalCollision(playerPosition, vine.position) or (warpSystem:isClimbing() and playerMove.velocity.y ~= 0) then
-            else
+            if AABBTotalCollision(playerPosition, vine.position) and (not warpSystem:isClimbing() or playerMove.velocity.y == 0) then
                 player:give('collision_exempt_component')
                 player:give('friction_exempt_component')
                 player:remove('gravity_component')
@@ -86,7 +85,6 @@ function WarpSystem:update()
             end
         end
     end
-
     -- If the player is below the Y level where it gets teleported
     if WarpSystem.climbed then
         local player = self.world:getSystem(PlayerSystem):getMario()

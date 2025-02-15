@@ -10,16 +10,17 @@ function SoundSystem:update()
     end
 
     local world = self:getWorld()
-    for _, entity in ipairs(world:getEntities()) do
-        if entity:has('sound_component') then
-            local sound = entity.sound_component
-            playSound(sound.soundId)
-            world:removeEntity(entity)
-        elseif entity:has('music_component') then
-            stopMusic()
-            local music = entity.music_component
-            playMusic(music.musicId)
-            world:removeEntity(entity)
-        end
+    local filterSystem = world:getSystem(FilterSystem)
+    for _, entity in ipairs(filterSystem:getSoundEntities()) do
+        local sound = entity.sound_component
+        playSound(sound.soundId)
+        world:removeEntity(entity)
+    end
+
+    for _, entity in ipairs(filterSystem:getMusicEntities()) do
+        stopMusic()
+        local music = entity.music_component
+        playMusic(music.musicId)
+        world:removeEntity(entity)
     end
 end

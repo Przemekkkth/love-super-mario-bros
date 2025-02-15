@@ -2,7 +2,7 @@ FlagSystem = Concord.system()
 FlagSystem.climbing = false
 FlagSystem.inSequence = false
 
-function FlagSystem:init(world) --onAddedToWorld(world))
+function FlagSystem:init(world)
     self.inSequence = false
 end
 
@@ -12,41 +12,30 @@ function FlagSystem:update()
    end
    
    local world = self:getWorld()
-   for _, entity in ipairs(world:getEntities()) do
-      if entity:has('flag_pole_component') then
-         local player = world:getSystem(PlayerSystem):getMario()
-   
-         if not AABBTotalCollision(entity.position, player.position) or FlagSystem:isClimbing() then
-            --pass
-         else
-            local flag
-            for _, e in ipairs(world:getEntities()) do
-               if e:has('flag_component') then
-                  flag = e
-                  break
-               end
-            end
-      
-            self:climbFlag(player, flag)
-         end
-      end
+   local filterSystem = world:getSystem(FilterSystem)
 
-      if entity:has('axe_component') then
-         local player = world:getSystem(PlayerSystem):getMario()
-   
-         if not AABBTotalCollision(entity.position, player.position) then
-            break
-         end
+   for _, entity in ipairs(filterSystem:getFlagPoleEntities()) do
+      local player = world:getSystem(PlayerSystem):getMario()
+      if AABBTotalCollision(entity.position, player.position) and not FlagSystem:isClimbing() then
+         local flag = filterSystem:getFlagEntities()[1]
+         self:climbFlag(player, flag)
+      end
+   end
+
+   for _, entity in ipairs(filterSystem:getAxeEntities()) do
+      local player = world:getSystem(PlayerSystem):getMario()
+      if AABBTotalCollision(entity.position, player.position) then
          self:hitAxe(player, entity)
       end
    end
+
 end
 
-function FlagSystem:setClimbing(val) -- static
+function FlagSystem:setClimbing(val)
    FlagSystem.climbing = val 
 end
 
-function FlagSystem:isClimbing() -- static
+function FlagSystem:isClimbing()
     return FlagSystem.climbing
 end
 

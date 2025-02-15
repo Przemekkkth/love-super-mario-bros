@@ -6,7 +6,8 @@ function RenderSystem:init(world)
 end
 
 function RenderSystem:draw()
-    if not self:isEnabled() then
+    local filterSystem = self.world:getSystem(FilterSystem) 
+    if not self:isEnabled() or filterSystem == nil then
         return
     end
 
@@ -79,13 +80,12 @@ function RenderSystem:renderText(entity, followCamera)
 end
 
 function RenderSystem:drawBackground()
-    if self.world:getSystem(BackgroundSystem) == nil then
+    local filterSystem = self.world:getSystem(FilterSystem) 
+    if filterSystem == nil then
         return
     end
-
-    local backgrounds = self.world:getSystem(BackgroundSystem):getEntities()
-    for _, entity in ipairs(backgrounds) do
-        if not self.transitionRendering then 
+    for _, entity in ipairs(filterSystem:getBackgroundEntities()) do
+        if not self.transitionRendering then
             if entity:has('position') and entity:has('texture') then
                 if CameraInstance:inCameraRange(entity.position) then
                     self:renderEntity(entity, true)
@@ -96,13 +96,9 @@ function RenderSystem:drawBackground()
 end
 
 function RenderSystem:drawForeground()
-    if self.world:getSystem(ForegroundSystem) == nil then
-        return
-    end
-
-    local foregrounds = self.world:getSystem(ForegroundSystem):getEntities()
-    for _, entity in ipairs(foregrounds) do
-        if not self.transitionRendering then 
+    local filterSystem = self.world:getSystem(FilterSystem) 
+    for _, entity in ipairs(filterSystem:getForegroundEntities()) do
+        if not self.transitionRendering then
             if entity:has('position') and entity:has('texture') then
                 if CameraInstance:inCameraRange(entity.position) then
                     self:renderEntity(entity, true)
@@ -113,15 +109,13 @@ function RenderSystem:drawForeground()
 end
 
 function RenderSystem:drawProjectile()
-    if self.world:getSystem(ProjectileSystem) == nil then
-        return
-    end
-
-    local projectiles = self.world:getSystem(ProjectileSystem):getEntities()
-    for _, entity in ipairs(projectiles) do
-        if not self.transitionRendering then 
+    local filterSystem = self.world:getSystem(FilterSystem) 
+    for _, entity in ipairs(filterSystem:getProjectileEntities()) do
+        if not self.transitionRendering then
             if entity:has('position') and entity:has('texture') then
-                self:renderEntity(entity, true)
+                if CameraInstance:inCameraRange(entity.position) then
+                    self:renderEntity(entity, true)
+                end
             end
         end
     end
@@ -161,9 +155,10 @@ function RenderSystem:drawEnemy()
 end
 
 function RenderSystem:drawFloatingText()
-    for _, entity in ipairs(self.world:getEntities()) do
-        if not self.transitionRendering then 
-            if entity:has('position') and entity:has('text') and entity:has('floating_text') then
+    local filterSystem = self.world:getSystem(FilterSystem) 
+    for _, entity in ipairs(filterSystem:getFloatingTextEntities()) do
+        if not self.transitionRendering then
+            if entity:has('position') and entity:has('text') then
                 self:renderText(entity, entity.text.followCamera)
             end
         end
@@ -181,13 +176,9 @@ function RenderSystem:drawPlayer()
 end
 
 function RenderSystem:drawAboveForeground()
-    if self.world:getSystem(AboveForegroundSystem) == nil then
-        return
-    end
-
-    local aboveforegrounds = self.world:getSystem(AboveForegroundSystem):getEntities()
-    for _, entity in ipairs(aboveforegrounds) do
-        if not self.transitionRendering then 
+    local filterSystem = self.world:getSystem(FilterSystem) 
+    for _, entity in ipairs(filterSystem:getAboveForegroundEntities()) do
+        if not self.transitionRendering then
             if entity:has('position') and entity:has('texture') then
                 if CameraInstance:inCameraRange(entity.position) then
                     self:renderEntity(entity, true)
@@ -198,13 +189,9 @@ function RenderSystem:drawAboveForeground()
 end
 
 function RenderSystem:drawParticle()
-    if self.world:getSystem(ParticleSystem) == nil then
-        return
-    end
-
-    local particles = self.world:getSystem(ParticleSystem):getEntities()
-    for _, entity in ipairs(particles) do
-        if not self.transitionRendering then 
+    local filterSystem = self.world:getSystem(FilterSystem) 
+    for _, entity in ipairs(filterSystem:getParticleEntities()) do
+        if not self.transitionRendering then
             if entity:has('position') and entity:has('texture') then
                 self:renderEntity(entity, true)
             end
@@ -213,16 +200,18 @@ function RenderSystem:drawParticle()
 end
 
 function RenderSystem:drawIcon()
-    for _, entity in ipairs(self.world:getEntities()) do
-        if entity:has('position') and entity:has('texture') and entity:has('icon') then
+    local filterSystem = self.world:getSystem(FilterSystem) 
+    for _, entity in ipairs(filterSystem:getIconEntities()) do
+        if entity:has('position') and entity:has('texture') then
             self:renderEntity(entity, false)
         end
     end
 end
 
 function RenderSystem:drawText()
-    for _, entity in ipairs(self.world:getEntities()) do
-        if entity:has('position') and entity:has('text') then
+    local filterSystem = self.world:getSystem(FilterSystem) 
+    for _, entity in ipairs(filterSystem:getTextEntities()) do
+        if entity:has('position') then
             if not entity:has('floating_text') then
                 self:renderText(entity, entity.text.followCamera)
             end

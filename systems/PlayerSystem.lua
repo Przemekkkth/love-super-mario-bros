@@ -3,7 +3,7 @@ PlayerSystem = Concord.system()
 PlayerSystem.inputEnabled = true
 PlayerSystem.inGameStart = false
 
-function PlayerSystem:init(world) --onAddedToWorld(world))
+function PlayerSystem:init(world)
     self.mario = Concord.entity(world)
     self.xDir = 0
     self.left = 0
@@ -144,8 +144,8 @@ function PlayerSystem:update()
     self:checkEnemyCollisions()
 
     -- Projectile Collision
-    local projectiles = world:getSystem(ProjectileSystem):getEntities()
-    for _, projectile in ipairs(projectiles) do
+    local filterSystem = world:getSystem(FilterSystem)
+    for _, projectile in ipairs(filterSystem:getProjectileEntities()) do
         local projectilePosition = projectile.position
         if projectile:has('position') then
             if (not CameraInstance:inCameraRange(projectilePosition)) or (not AABBTotalCollision(position, projectilePosition) or self:isSuperStar() or (self.mario:has('ending_blink_component') or self.mario:has('frozen_component') or self.mario:has('particle'))) then
@@ -791,149 +791,138 @@ function PlayerSystem:checkEnemyCollisions()
     local world = self:getWorld()
     local position = self.mario.position
     local move = self.mario.moving_component
-    local enemyCrushed = false
-
-    processEntitiesWithComponents(world, {'enemy', 'position'}, 
-        function(enemy)
-            if not AABBTotalCollision(enemy.position, position) or self.mario:has('frozen_component') or enemy:has('dead_component') or self.currentState == ANIMATION_STATE.GAMEOVER then
-                return
-            end
-
+    local enemies = world:getSystem(EnemySystem):getEntities()
+    
+    for _, enemy in ipairs(enemies) do
+        if AABBTotalCollision(enemy.position, position) and not self.mario:has('frozen_component') and not enemy:has('dead_component') and self.currentState ~= ANIMATION_STATE.GAMEOVER then
             local enemyMove = enemy.moving_component
             local enemyPosition = enemy.position
             local enemyType = enemy.enemy.type 
+            local isMarioActivated = not (self.mario:has('frozen_component') or self.mario:has('ending_blink_component'))
+
+            if self:isSuperStar() and enemyType ~= ENEMY_TYPE.FIRE_BAR then
+                enemyMove.velocity.x = 0
+                enemy:give('enemy_destroyed_component')
+                self:addScore(100)
+            end
 
             if enemy.enemy.type == ENEMY_TYPE.KOOPA_SHELL then
-                if self:isSuperStar() then
-                    enemyMove.velocity.x = 0
-                    enemy:give('enemy_destroyed_component')
-                    local score = Concord.entity(world)
-                    score:give('add_score_component', 100)
-                end
-
-                if move.velocity.y > 0.0 then
-                    if enemyMove.velocity.x ~= 0 then
-                        enemyMove.velocity.x = 0
-                        move.velocity.y = -ENEMY_BOUNCE
-                        enemyCrushed = true
-                    else
-                        enemyMove.velocity.x = 6.0
-                    end
-                -- Hit from left side
-                elseif position:getLeft() <= enemyPosition:getLeft() and position:getRight() < enemyPosition:getRight() and move.velocity.y <= 0.0 then
-                    enemyMove.velocity.x = 6.0
-                elseif position:getLeft() > enemyPosition:getLeft() and position:getRight() > enemyPosition:getRight() then
-                    enemyMove.velocity.x = -6.0
-                end
+                self:checkKoopaShellCollision(enemy)
             elseif enemy.enemy.type == ENEMY_TYPE.FIRE_BAR then
-                if not self:isSuperStar() and not self.mario:has('ending_blink_component') then
-                    self:onGameOver(false)
-                end
+                self:checkFireBarCollision()
             elseif enemy.enemy.type == ENEMY_TYPE.KOOPA_PARATROOPA then
-                if self:isSuperStar() then
-                    enemyMove.velocity.x = 0;
-                    enemy:give('enemy_destroyed_component')
-                    local score = Concord.entity(world)
-                    score:give('add_score_component', 100)
-                    return;
-                end
-                
-                if move.velocity.y > 0 and enemy:has('crushable_component') then
-                    enemy:give('crushed_component')
-                    position:setBottom(enemyPosition:getTop())
-                    move.velocity.y = -MARIO_BOUNCE
-                    enemyCrushed = true
-
-                    local score = Concord.entity(world)
-                    score:give('add_score_component', 100)
-                elseif not enemyCrushed and move.velocity.x <= 0 and not (self.mario:has('frozen_component') or self.mario:has('ending_blink_component')) then
-                    self:onGameOver(false)
-                elseif enemyCrushed then
-                    enemy:give('crushed_component')
-                    enemyMove.velocity.x = 0
-                    move.velocity.y = -MARIO_BOUNCE
-
-                    local score = Concord.entity(world)
-                    score:give('add_score_component', 100)
-                end
+                self:checkKoopaParatroopaCollision(enemy)
             elseif enemy.enemy.type == ENEMY_TYPE.CHEEP_CHEEP then
-                if self:isSuperStar() then
-                    enemyMove.velocity.x = 0
-                    enemy:give('enemy_destroyed_component')
-                    local score = Concord.entity(world)
-                    score:give('add_score_component', 100)
-                    return
-                end
-
-                if (move.velocity.y > 0) or (move.velocity.y == 0 and enemyMove.velocity.y < 0) and enemy:has('crushable_component') then
-                    enemy:give('crushed_component')
-                    enemyMove.velocity.x = 0
-                    move.velocity.y = -MARIO_BOUNCE
-                    enemyCrushed = true
-                    local score = Concord.entity(world)
-                    score:give('add_score_component', 100)
-                elseif not enemyCrushed and move.velocity.y <= 0 and not (self.mario:has('frozen_component') or self.mario:has('ending_blink_component') ) then
-                    self:onGameOver(false)
-                elseif enemyCrushed then
-                    enemy:give('crushed_component')
-                    enemyMove.velocity.x = 0
-                    move.velocity.y = -MARIO_BOUNCE
-
-                    local score = Concord.entity(world)
-                    score:give('add_score_component', 100)   
-                else
-                    if self:isSuperStar() then
-                        enemyMove.velocity.x = 0
-                        enemy:give('enemy_destroyed_component')
-                        local score = Concord.entity(world)
-                        score:give('add_score_component', 100)  
-                        return
-                    end
-
-                    if move.velocity.y > 0 and enemy:has('crsuhable_component') then
-                        enemy:give('crushed_component')
-                        enemyMove.velocity.x = 0
-                        move.velocity.y = -MARIO_BOUNCE
-                        enemyCrushed = true
-                        local score = Concord.entity(world)
-                        score:give('add_score_component', 100)
-                    elseif not enemyCrushed and move.velocity.y <= 0 and not (self.mario:has('frozen_component') and self.mario:has('ending_blink_component')) then
-                        self:onGameOver(false)
-                    elseif enemyCrushed then
-                        enemy:give('crushed_component')
-                        enemyMove.velocity.x = 0
-                        move.velocity.y = -MARIO_BOUNCE
-                        local score = Concord.entity(world)
-                        score:give('add_score_component', 100)
-                    end
-                end
+                self:checkCheepCheepCollision(enemy)
             else
-                if self:isSuperStar() then
-                    enemy.moving_component.velocity.x = 0
-                    enemy:give('enemy_destroyed_component')
-                    local score = Concord.entity(world)
-                    score:give('add_score_component', 100)
-                    return
-                end
-                if move.velocity.y > 0 and enemy:has('crushable_component') then
-                    enemy:give('crushed_component')
-                    enemy.moving_component.velocity.x = 0
-                    move.velocity.y = -MARIO_BOUNCE
-                    enemyCrushed = true
-                    local score = Concord.entity(world)
-                    score:give('add_score_component', 100)
-                elseif not enemyCrushed and move.velocity.y <= 0 and not (self.mario:has('frozen_component') and self.mario:has('ending_blink_component')) then
-                    self:onGameOver()
-                elseif enemyCrushed then
-                    enemy:give('crushed_component')
-                    enemy.moving_component.velocity.x = 0
-                    move.velocity.y = -MARIO_BOUNCE
-
-                    local score = Concord.entity(world)
-                    score:give('add_score_component', 100)
-                end
+                self:checkEnemyCollision(enemy)
             end
-        end)
+        end
+    end
+end
+
+function PlayerSystem:checkKoopaShellCollision(enemy)
+    local enemyMove = enemy.moving_component
+    local enemyPosition = enemy.position
+    local move = self.mario.moving_component
+    local position = self.mario.position
+
+    if move.velocity.y > 0.0 then
+        if enemyMove.velocity.x ~= 0 then
+            enemyMove.velocity.x = 0
+            move.velocity.y = -ENEMY_BOUNCE
+        else
+            enemyMove.velocity.x = 6.0
+        end
+    -- Hit from left side
+    elseif position:getLeft() <= enemyPosition:getLeft() and position:getRight() < enemyPosition:getRight() and move.velocity.y <= 0.0 then
+        enemyMove.velocity.x = 6.0
+    elseif position:getLeft() > enemyPosition:getLeft() and position:getRight() > enemyPosition:getRight() then
+        enemyMove.velocity.x = -6.0
+    end
+end
+
+function PlayerSystem:checkFireBarCollision()
+    if not self:isSuperStar() and not self.mario:has('ending_blink_component') then
+        self:onGameOver(false)
+    end
+end
+
+function PlayerSystem:checkKoopaParatroopaCollision(enemy)
+    local world = self:getWorld()
+    local enemyMove = enemy.moving_component
+    local enemyPosition = enemy.position
+    local move = self.mario.moving_component
+    local position = self.mario.position
+    
+    local isMarioFalling = move.velocity.y > 0
+    local isMarioActivated = not (self.mario:has('frozen_component') or self.mario:has('ending_blink_component'))
+
+    if isMarioFalling and enemy:has('crushable_component') then
+        enemy:give('crushed_component')
+        position:setBottom(enemyPosition:getTop())
+        move.velocity.y = -MARIO_BOUNCE
+        enemy.enemy.crushed = true
+        self:addScore(100)
+    elseif not enemy.enemy.crushed and move.velocity.y <= 0 and isMarioActivated then
+        self:onGameOver(false)
+    elseif enemy.enemy.crushed then
+        enemy:give('crushed_component')
+        enemyMove.velocity.x = 0
+        move.velocity.y = -MARIO_BOUNCE
+        self:addScore(100)
+    end
+end
+
+function PlayerSystem:checkCheepCheepCollision(enemy)
+    local world = self:getWorld()
+    local enemyMove = enemy.moving_component
+    local enemyPosition = enemy.position
+    local move = self.mario.moving_component
+    local position = self.mario.position
+
+    local isMarioFalling = move.velocity.y > 0
+    local isMarioActivated = not (self.mario:has('frozen_component') or self.mario:has('ending_blink_component'))
+
+    if isMarioFalling or (move.velocity.y == 0 and enemyMove.velocity.y < 0) and enemy:has('crushable_component') then
+        enemy:give('crushed_component')
+        enemyMove.velocity.x = 0
+        move.velocity.y = -MARIO_BOUNCE
+        enemy.enemy.crushed = true
+        self:addScore(100)
+    elseif not enemy.enemy.crushed and move.velocity.y <= 0 and isMarioActivated then
+        self:onGameOver(false)
+    elseif enemy.enemy.crushed then
+        enemy:give('crushed_component')
+        enemyMove.velocity.x = 0
+        move.velocity.y = -MARIO_BOUNCE
+        self:addScore(100)
+    end
+end
+
+function PlayerSystem:checkEnemyCollision(enemy)
+    local world = self:getWorld()
+    local enemyMove = enemy.moving_component
+    local enemyPosition = enemy.position
+    local move = self.mario.moving_component
+    local position = self.mario.position
+    local isMarioFalling = move.velocity.y > 0
+    local isMarioActivated = not (self.mario:has('frozen_component') or self.mario:has('ending_blink_component'))
+
+    if isMarioFalling and enemy:has('crushable_component') then
+        enemy:give('crushed_component')
+        enemy.moving_component.velocity.x = 0
+        move.velocity.y = -MARIO_BOUNCE
+        enemy.enemy.crushed = true
+        self:addScore(100)
+    elseif not enemy.enemy.crushed and move.velocity.y <= 0 and isMarioActivated then
+        self:onGameOver()
+    elseif enemy.enemy.crushed then
+        enemy:give('crushed_component')
+        enemy.moving_component.velocity.x = 0
+        move.velocity.y = -MARIO_BOUNCE
+        self:addScore(100)
+    end
 end
 
 function PlayerSystem:createFireball()
@@ -1393,4 +1382,10 @@ end
 
 function PlayerSystem:getMario()
     return self.mario
+end
+
+function PlayerSystem:addScore(n)
+    local world = self:getWorld()
+    local score = Concord.entity(world)
+    score:give('add_score_component', n)
 end
