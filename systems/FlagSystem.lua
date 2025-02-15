@@ -2,10 +2,9 @@ FlagSystem = Concord.system()
 FlagSystem.climbing = false
 FlagSystem.inSequence = false
 
-function FlagSystem:init(world) --onAddedToWorld(world))
+function FlagSystem:init(world)
     self.inSequence = false
 end
-
 
 function FlagSystem:update()
    if not self:isEnabled() then
@@ -32,11 +31,11 @@ function FlagSystem:update()
 
 end
 
-function FlagSystem:setClimbing(val) -- static
+function FlagSystem:setClimbing(val)
    FlagSystem.climbing = val 
 end
 
-function FlagSystem:isClimbing() -- static
+function FlagSystem:isClimbing()
     return FlagSystem.climbing
 end
 

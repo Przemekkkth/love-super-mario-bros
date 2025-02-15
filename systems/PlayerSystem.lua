@@ -3,7 +3,7 @@ PlayerSystem = Concord.system()
 PlayerSystem.inputEnabled = true
 PlayerSystem.inGameStart = false
 
-function PlayerSystem:init(world) --onAddedToWorld(world))
+function PlayerSystem:init(world)
     self.mario = Concord.entity(world)
     self.xDir = 0
     self.left = 0
